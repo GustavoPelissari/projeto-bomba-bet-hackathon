@@ -1,4 +1,4 @@
-package com.example.bombaBet.domain;
+package com.example.bombaBet.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
