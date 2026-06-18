@@ -3,7 +3,6 @@ package com.example.bombaBet.repository;
 import com.example.bombaBet.model.Palpite;
 import com.example.bombaBet.model.Partida;
 import com.example.bombaBet.model.Usuario;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.Optional;
 public interface PalpiteRepository
         extends JpaRepository<Palpite, Long> {
 
-    List<Palpite> findByUsuario(
+    List<Palpite> findByUsuarioOrderByPartidaDataHoraAsc(
             Usuario usuario
     );
 
@@ -25,4 +24,12 @@ public interface PalpiteRepository
             Partida partida
     );
 
+    boolean existsByUsuarioAndPartida(
+            Usuario usuario,
+            Partida partida
+    );
+
+    long countByUsuario(
+            Usuario usuario
+    );
 }
