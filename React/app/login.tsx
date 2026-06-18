@@ -1,5 +1,6 @@
 import React, { useState } from 'react'; // React + hook de estado
 import {
+  Image,                  // exibe imagens (logo)
   KeyboardAvoidingView,   // evita que o teclado cubra os campos
   Platform,               // detecta o sistema (iOS/Android/web)
   ScrollView,             // permite rolar o conteúdo
@@ -55,10 +56,13 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled" // permite tocar em botões com o teclado aberto
       >
         <View style={styles.card}>
-          {/* Nome do app em texto (não há arquivo de logo na pasta assets). */}
-          <Text style={styles.wordmark} accessibilityRole="header">
-            Bomba Bet
-          </Text>
+          {/* Logo do app. require() carrega a imagem local de assets/. */}
+          <Image
+            source={require('../assets/logo_bombabet.png')}
+            style={styles.logo}
+            resizeMode="contain" // mostra a logo inteira, sem cortar
+            accessibilityLabel="Bomba Bet"
+          />
           {/* Selo estilo "Bomba Patch": chama atenção logo abaixo da logo. */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>100% ATUALIZADO</Text>
@@ -152,10 +156,10 @@ const styles = StyleSheet.create({
       default: {},
     }),
   },
-  wordmark: {
-    ...theme.font.h1,                // tamanho/peso de título grande
-    color: theme.colors.accent,      // dourado
-    textAlign: 'center',
+  logo: {
+    width: '100%',     // largura disponível; o contain reduz mantendo a proporção
+    height: 80,        // altura fixa pequena (ajuste este número p/ deixar maior/menor)
+    alignSelf: 'center',
     marginBottom: theme.spacing.sm,
   },
   badge: {
