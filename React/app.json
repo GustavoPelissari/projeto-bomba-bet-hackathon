@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Bomba Bet",
+    "slug": "bomba-bet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "bombabet",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0B0C"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
