@@ -1,5 +1,6 @@
 package com.example.bombaBet.api.controller;
 
+import com.example.bombaBet.api.dto.palpite.PalpiteResponseDto;
 import com.example.bombaBet.model.Palpite;
 import com.example.bombaBet.service.PalpiteService;
 import lombok.RequiredArgsConstructor;
@@ -15,76 +16,96 @@ public class PalpiteController {
     private final PalpiteService palpiteService;
 
     @GetMapping
-    public List<Palpite> listarTodos() {
-        return palpiteService.listarTodos();
+    public List<PalpiteResponseDto> listarTodos() {
+        return palpiteService.listarTodos()
+                .stream()
+                .map(PalpiteResponseDto::fromEntity)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Palpite buscarPorId(
+    public PalpiteResponseDto buscarPorId(
             @PathVariable Long id
     ) {
-        return palpiteService.buscarPorId(id);
+        return PalpiteResponseDto.fromEntity(
+                palpiteService.buscarPorId(id)
+        );
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<Palpite> listarPorUsuario(
+    public List<PalpiteResponseDto> listarPorUsuario(
             @PathVariable Long usuarioId
     ) {
-        return palpiteService.listarPorUsuario(usuarioId);
+        return palpiteService.listarPorUsuario(usuarioId)
+                .stream()
+                .map(PalpiteResponseDto::fromEntity)
+                .toList();
     }
 
     @GetMapping("/email")
-    public List<Palpite> listarPorEmail(
+    public List<PalpiteResponseDto> listarPorEmail(
             @RequestParam String email
     ) {
-        return palpiteService.listarPorEmailUsuario(email);
+        return palpiteService.listarPorEmailUsuario(email)
+                .stream()
+                .map(PalpiteResponseDto::fromEntity)
+                .toList();
     }
 
     @GetMapping("/partida/{partidaId}")
-    public List<Palpite> listarPorPartida(
+    public List<PalpiteResponseDto> listarPorPartida(
             @PathVariable Long partidaId
     ) {
-        return palpiteService.listarPorPartida(partidaId);
+        return palpiteService.listarPorPartida(partidaId)
+                .stream()
+                .map(PalpiteResponseDto::fromEntity)
+                .toList();
     }
 
     @GetMapping("/usuario/{usuarioId}/partida/{partidaId}")
-    public Palpite buscarPorUsuarioEPartida(
+    public PalpiteResponseDto buscarPorUsuarioEPartida(
             @PathVariable Long usuarioId,
             @PathVariable Long partidaId
     ) {
-        return palpiteService.buscarPorUsuarioEPartida(
-                usuarioId,
-                partidaId
+        return PalpiteResponseDto.fromEntity(
+                palpiteService.buscarPorUsuarioEPartida(
+                        usuarioId,
+                        partidaId
+                )
         );
     }
 
     @PostMapping
-    public Palpite registrar(
+    public PalpiteResponseDto registrar(
             @RequestParam Long usuarioId,
             @RequestParam Long partidaId,
             @RequestParam Integer golsCasa,
             @RequestParam Integer golsVisitante
     ) {
-        return palpiteService.registrar(
-                usuarioId,
-                partidaId,
-                golsCasa,
-                golsVisitante
+        return PalpiteResponseDto.fromEntity(
+                palpiteService.registrar(
+                        usuarioId,
+                        partidaId,
+                        golsCasa,
+                        golsVisitante
+                )
         );
     }
 
     @PutMapping("/{palpiteId}")
-    public Palpite editar(
+    public PalpiteResponseDto editar(
             @PathVariable Long palpiteId,
             @RequestParam Long usuarioId,
             @RequestParam Integer golsCasa,
             @RequestParam Integer golsVisitante
     ) {
-        return palpiteService.editar(
-                palpiteId,
-                usuarioId,
-                golsCasa,
-                golsVisitante
+        return PalpiteResponseDto.fromEntity(
+                palpiteService.editar(
+                        palpiteId,
+                        usuarioId,
+                        golsCasa,
+                        golsVisitante
+                )
         );
     }
 
@@ -110,5 +131,4 @@ public class PalpiteController {
     ) {
         return palpiteService.contarPorUsuario(usuarioId);
     }
-
 }
