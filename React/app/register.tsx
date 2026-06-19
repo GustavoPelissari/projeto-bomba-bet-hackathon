@@ -54,7 +54,7 @@ export default function RegisterScreen() {
     try {
       // TODO POST /auth/register
       await login(email, password); // simula o cadastro fazendo login (mock)
-      router.replace('/(tabs)');    // vai para a área logada
+      router.replace('/(tabs)');    // vai para a área logada (abas)
     } finally {
       setLoading(false);
     }

@@ -48,24 +48,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Estado de carregamento inicial (começa true até checar o storage).
   const [loading, setLoading] = useState(true);
 
-  // restaura sessão salva ao iniciar
+  // Ao iniciar, o app começa SEMPRE deslogado (cai na tela de login).
   // useEffect com lista de dependências vazia [] roda só UMA vez, ao montar.
   useEffect(() => {
-    // Função assíncrona autoexecutável (IIFE) — useEffect não pode ser async direto.
-    (async () => {
-      try {
-        // Tenta ler o token salvo anteriormente no dispositivo.
-        const saved = await AsyncStorage.getItem(TOKEN_KEY);
-        if (saved) {
-          // Se havia token salvo, restaura a sessão (token + usuário mock).
-          setToken(saved);
-          setUser(MOCK_USER);
-        }
-      } finally {
-        // Independente de ter achado ou não, encerra o carregamento.
-        setLoading(false);
-      }
-    })();
+    // DURANTE O DESENVOLVIMENTO: não restauramos a sessão, para sempre começar no login.
+    // Apenas encerramos o "carregando".
+    setLoading(false);
+
+    // QUANDO QUISER MANTER O USUÁRIO LOGADO entre aberturas do app,
+    // apague o setLoading(false) acima e descomente o bloco abaixo:
+    //
+    // (async () => {
+    //   try {
+    //     const saved = await AsyncStorage.getItem(TOKEN_KEY); // lê o token salvo
+    //     if (saved) {
+    //       setToken(saved);   // restaura o token
+    //       setUser(MOCK_USER); // restaura o usuário
+    //     }
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // })();
   }, []);
 
   // Função de login. useCallback evita recriá-la a cada render.
