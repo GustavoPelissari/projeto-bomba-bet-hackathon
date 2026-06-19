@@ -1,5 +1,6 @@
 package com.example.bombaBet.api.controller;
 
+import com.example.bombaBet.api.dto.usuario.UsuarioResponseDto;
 import com.example.bombaBet.model.Usuario;
 import com.example.bombaBet.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -15,30 +16,39 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public List<Usuario> listarTodos() {
-        return usuarioService.listarTodos();
+    public List<UsuarioResponseDto> listarTodos() {
+        return usuarioService.listarTodos()
+                .stream()
+                .map(UsuarioResponseDto::fromEntity)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Usuario buscarPorId(
+    public UsuarioResponseDto buscarPorId(
             @PathVariable Long id
     ) {
-        return usuarioService.buscarPorId(id);
+        return UsuarioResponseDto.fromEntity(
+                usuarioService.buscarPorId(id)
+        );
     }
 
     @PostMapping
-    public Usuario cadastrar(
+    public UsuarioResponseDto cadastrar(
             @RequestBody Usuario usuario
     ) {
-        return usuarioService.cadastrar(usuario);
+        return UsuarioResponseDto.fromEntity(
+                usuarioService.cadastrar(usuario)
+        );
     }
 
     @PutMapping("/{id}")
-    public Usuario atualizar(
+    public UsuarioResponseDto atualizar(
             @PathVariable Long id,
             @RequestBody Usuario usuario
     ) {
-        return usuarioService.atualizar(id, usuario);
+        return UsuarioResponseDto.fromEntity(
+                usuarioService.atualizar(id, usuario)
+        );
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.example.bombaBet.api.controller;
 
+import com.example.bombaBet.api.dto.selecao.SelecaoResponseDto;
 import com.example.bombaBet.model.Selecao;
 import com.example.bombaBet.service.SelecaoService;
 import lombok.RequiredArgsConstructor;
@@ -15,30 +16,39 @@ public class SelecaoController {
     private final SelecaoService selecaoService;
 
     @GetMapping
-    public List<Selecao> listarTodas() {
-        return selecaoService.listarTodas();
+    public List<SelecaoResponseDto> listarTodas() {
+        return selecaoService.listarTodas()
+                .stream()
+                .map(SelecaoResponseDto::fromEntity)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Selecao buscarPorId(
+    public SelecaoResponseDto buscarPorId(
             @PathVariable Long id
     ) {
-        return selecaoService.buscarPorId(id);
+        return SelecaoResponseDto.fromEntity(
+                selecaoService.buscarPorId(id)
+        );
     }
 
     @PostMapping
-    public Selecao cadastrar(
+    public SelecaoResponseDto cadastrar(
             @RequestBody Selecao selecao
     ) {
-        return selecaoService.cadastrar(selecao);
+        return SelecaoResponseDto.fromEntity(
+                selecaoService.cadastrar(selecao)
+        );
     }
 
     @PutMapping("/{id}")
-    public Selecao atualizar(
+    public SelecaoResponseDto atualizar(
             @PathVariable Long id,
             @RequestBody Selecao selecao
     ) {
-        return selecaoService.atualizar(id, selecao);
+        return SelecaoResponseDto.fromEntity(
+                selecaoService.atualizar(id, selecao)
+        );
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.example.bombaBet.api.dto.usuario;
 
+import com.example.bombaBet.model.Usuario;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,12 +18,21 @@ public class UsuarioResponseDto {
 
     private String privilegio;
 
-    private boolean bloqueado;
-
-    private boolean ativo;
-
     private Integer pontuacaoTotal;
 
     private Integer placaresExatos;
 
+    public static UsuarioResponseDto fromEntity(
+            Usuario usuario
+    ) {
+        return UsuarioResponseDto.builder()
+                .id(usuario.getId())
+                .nome(usuario.getNome())
+                .email(usuario.getEmail())
+                .fotoPerfil(usuario.getFotoPerfil())
+                .privilegio(usuario.getPrivilegio())
+                .pontuacaoTotal(usuario.getPontuacaoTotal())
+                .placaresExatos(usuario.getPlacaresExatos())
+                .build();
+    }
 }

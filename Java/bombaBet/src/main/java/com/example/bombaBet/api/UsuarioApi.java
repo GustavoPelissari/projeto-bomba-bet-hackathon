@@ -242,8 +242,6 @@ public class UsuarioApi {
                 .email(usuario.getEmail())
                 .fotoPerfil(usuario.getFotoPerfil())
                 .privilegio(usuario.getPrivilegio())
-                .bloqueado(usuario.isBloqueado())
-                .ativo(usuario.isAtivo())
                 .pontuacaoTotal(usuario.getPontuacaoTotal())
                 .placaresExatos(usuario.getPlacaresExatos())
                 .build();
