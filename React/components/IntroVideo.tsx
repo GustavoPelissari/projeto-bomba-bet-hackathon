@@ -21,7 +21,7 @@ export function IntroVideo({ onFinish }: Props) {
   // Ouve o evento de "fim do vídeo" para avançar para o app.
   useEffect(() => {
     const sub = player.addListener('playToEnd', () => {
-      onFinish(); // vídeo chegou ao fim -> segue para o app (tela de login)
+      onFinish(); // vídeo chegou ao fim -> segue para o app
     });
     return () => sub.remove(); // limpa o listener ao desmontar
   }, [player, onFinish]);
@@ -29,10 +29,10 @@ export function IntroVideo({ onFinish }: Props) {
   return (
     <View style={styles.container}>
       <VideoView
-        style={StyleSheet.absoluteFill} // vídeo ocupa a tela inteira
+        style={styles.video}             // vídeo centralizado, menor que a tela
         player={player}
-        contentFit="contain"            // mostra o vídeo inteiro, sem cortar
-        nativeControls={false}          // sem controles de player
+        contentFit="contain"             // mostra o vídeo inteiro, sem cortar
+        nativeControls={false}           // sem controles de player
       />
     </View>
   );
@@ -42,5 +42,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.bg, // fundo escuro nas bordas do vídeo
+    alignItems: 'center',             // centraliza horizontalmente
+    justifyContent: 'center',         // centraliza verticalmente
+  },
+  video: {
+    width: '80%',      // ocupa 80% da largura (reduz o tamanho da logo)
+    aspectRatio: 1,    // mantém um quadro proporcional; ajuste se o vídeo não for quadrado
   },
 });
