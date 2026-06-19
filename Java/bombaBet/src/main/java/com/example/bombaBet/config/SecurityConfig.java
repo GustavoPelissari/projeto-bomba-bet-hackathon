@@ -21,43 +21,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            JwtAuthenticationFilter jwtAuthenticationFilter
+            HttpSecurity http
     ) throws Exception {
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
+                .authorizeHttpRequests(auth ->
+                        auth.anyRequest().permitAll()
                 )
-
-                .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/api/selecoes/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/partidas/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios/ranking").permitAll()
-
-                        .requestMatchers("/api/palpites/**").authenticated()
-
-                        .requestMatchers("/api/selecoes/**").hasRole("ADMIN")
-                        .requestMatchers("/api/partidas/**").hasRole("ADMIN")
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
-
-                        .anyRequest().authenticated()
-                )
-
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
-
                 .build();
     }
 
