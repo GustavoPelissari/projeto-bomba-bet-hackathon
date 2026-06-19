@@ -38,7 +38,7 @@ export default function LoginScreen() {
     try {
       // TODO POST /auth/login
       await login(email, password);   // faz login (hoje é mock)
-      router.replace('/(tabs)');      // vai para a área logada (replace = sem voltar p/ login)
+      router.replace('/(tabs)');      // vai para a área logada (abas) - replace = sem voltar p/ login
     } finally {
       setLoading(false); // desativa o carregamento, mesmo se der erro
     }
