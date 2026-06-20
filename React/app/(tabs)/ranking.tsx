@@ -9,7 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';                  // ícones
 import { theme } from '../../constants/theme';                  // tokens de design
 import { getRanking, getMyRankingEntry } from '../../services/rankingService'; // serviços de ranking
-import { CURRENT_USER_ID } from '../../mocks/user';             // id do usuário logado
+import { useAuth } from '../../contexts/AuthContext';           // id do usuário logado
 import { initialOf } from '../../utils/format';                 // pega a inicial do nome
 import type { RankingEntry } from '../../types/domain';         // tipo de linha do ranking
 import ScreenContainer from '../../components/ScreenContainer';
@@ -31,6 +31,7 @@ function Avatar({ name, accent }: { name: string; accent?: boolean }) {
 
 // Tela de ranking (aba Ranking).
 export default function RankingScreen() {
+  const { user } = useAuth();                                  // usuário logado (para destacar a sua linha)
   const [items, setItems] = useState<RankingEntry[]>([]);       // linhas já carregadas
   const [me, setMe] = useState<RankingEntry | null>(null);     // a linha do próprio usuário
   const [page, setPage] = useState(1);                         // página atual da paginação
@@ -96,7 +97,7 @@ export default function RankingScreen() {
 
   // Desenha uma linha do ranking.
   const renderItem = ({ item }: { item: RankingEntry }) => {
-    const isMe = item.userId === CURRENT_USER_ID; // esta linha é do usuário logado?
+    const isMe = item.userId === user?.id; // esta linha é do usuário logado?
     return (
       <View
         style={[styles.row, isMe && styles.rowMe]} // destaca a própria linha

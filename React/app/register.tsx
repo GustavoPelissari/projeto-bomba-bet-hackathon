@@ -28,7 +28,7 @@ type Errors = {
 
 // Tela de cadastro de nova conta.
 export default function RegisterScreen() {
-  const { login } = useAuth();                          // reutiliza login p/ já entrar após cadastrar
+  const { register } = useAuth();                       // função de cadastro (chama a API e já loga)
   const [name, setName] = useState('');                 // estado do nome
   const [email, setEmail] = useState('');               // estado do e-mail
   const [password, setPassword] = useState('');         // estado da senha
@@ -52,9 +52,14 @@ export default function RegisterScreen() {
     if (!validate()) return; // se inválido, para aqui
     setLoading(true);
     try {
-      // TODO POST /auth/register
-      await login(email, password); // simula o cadastro fazendo login (mock)
+      // Cadastra na API (POST /api/auth/cadastro) e já faz login automaticamente.
+      await register(name, email, password);
       router.replace('/(tabs)');    // vai para a área logada (abas)
+    } catch (e) {
+      // Mostra o erro vindo do backend (ex.: "e-mail já cadastrado") no campo e-mail.
+      setErrors({
+        email: e instanceof Error ? e.message : 'Não foi possível cadastrar.',
+      });
     } finally {
       setLoading(false);
     }

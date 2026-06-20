@@ -1,53 +1,77 @@
-// import api from './api'; // (desativado) cliente HTTP real para o futuro backend
-import { MOCK_USER } from '../mocks/user';                  // dados falsos do usuário
-import { MOCK_USER_RANKING_ENTRY } from '../mocks/ranking'; // linha do usuário no ranking falso
-import type { UserProfile } from '../types/domain';         // tipo do perfil
+import { apiGet, apiPut, apiDelete } from './api';
+import type { UserProfile } from '../types/domain';
 
-// Atraso artificial para simular latência de rede.
-const DELAY = 400;
-
-// cópia mutável em memória para refletir edições durante a sessão
-let profile: UserProfile = {
-  ...MOCK_USER, // copia todos os campos do usuário mock
-  // mantém a posição de ranking coerente com o ranking gerado
-  rankingPosition: MOCK_USER_RANKING_ENTRY.position,    // posição vinda do ranking mock
-  totalPoints: MOCK_USER_RANKING_ENTRY.totalPoints,     // total de pontos vindo do ranking mock
-  exactScores: MOCK_USER_RANKING_ENTRY.exactScores,     // placares exatos vindos do ranking mock
+// Formato cru do usuário vindo da API (UsuarioResponseDto).
+type UsuarioDto = {
+  id: number;
+  nome: string;
+  email: string;
+  fotoPerfil: string | null;
+  privilegio: string;
+  pontuacaoTotal: number | null;
+  placaresExatos: number | null;
 };
 
-// Função genérica que resolve um valor após DELAY ms (simula chamada assíncrona).
-function delay<T>(value: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), DELAY));
+// Página do Spring (usada só para descobrir a posição no ranking).
+type SpringPage<T> = { content: T[]; totalElements: number; number: number };
+
+// Converte UsuarioDto -> UserProfile (posição entra à parte).
+function toProfile(u: UsuarioDto, rankingPosition: number): UserProfile {
+  return {
+    id: u.id,
+    name: u.nome,
+    email: u.email,
+    avatar: u.fotoPerfil ?? null,
+    totalPoints: u.pontuacaoTotal ?? 0,
+    rankingPosition,
+    exactScores: u.placaresExatos ?? 0,
+  };
 }
 
-// Retorna o perfil atual do usuário.
+// Descobre a posição do usuário no ranking (best-effort; 0 se não achar).
+async function descobrirPosicao(userId: number): Promise<number> {
+  try {
+    const sp = await apiGet<SpringPage<UsuarioDto>>(
+      '/usuarios/ranking?page=0&size=1000'
+    );
+    const idx = sp.content.findIndex((u) => u.id === userId);
+    return idx >= 0 ? idx + 1 : 0;
+  } catch {
+    return 0; // se o ranking falhar, não quebramos o perfil
+  }
+}
+
+// Retorna o perfil do usuário logado (GET /api/usuarios/me — exige token).
 export async function getProfile(): Promise<UserProfile> {
-  // return (await api.get('/me')).data; // versão real (desativada)
-  return delay({ ...profile }); // devolve uma cópia do perfil após o atraso
+  const me = await apiGet<UsuarioDto>('/usuarios/me');
+  const posicao = await descobrirPosicao(me.id);
+  return toProfile(me, posicao);
 }
 
-// Formato (tipo) dos dados aceitos ao atualizar o perfil.
+// Dados aceitos ao atualizar o perfil.
 export type ProfileUpdate = {
-  name: string;            // novo nome (obrigatório)
-  avatar?: string | null;  // novo avatar (opcional: pode ser URL, null p/ remover, ou ausente)
+  name: string;
+  avatar?: string | null;
 };
 
-// Atualiza o perfil do usuário com os dados recebidos.
+// Atualiza o perfil (PUT /api/usuarios/me). O backend exige nome + email;
+// a senha NÃO é alterada aqui. Reaproveitamos o e-mail atual do /me.
 export async function updateProfile(
   data: ProfileUpdate
 ): Promise<UserProfile> {
-  // return (await api.put('/me', data)).data; // versão real (desativada)
-  profile = {
-    ...profile,        // mantém os campos atuais
-    name: data.name,   // sobrescreve o nome
-    // Só troca o avatar se ele foi informado (!== undefined); senão mantém o atual.
-    avatar: data.avatar !== undefined ? data.avatar : profile.avatar,
+  const me = await apiGet<UsuarioDto>('/usuarios/me');
+  const body = {
+    nome: data.name,
+    email: me.email, // mantém o e-mail atual (obrigatório no backend)
+    fotoPerfil: data.avatar !== undefined ? data.avatar : me.fotoPerfil,
   };
-  return delay({ ...profile }); // devolve o perfil atualizado após o atraso
+  const atualizado = await apiPut<UsuarioDto>('/usuarios/me', body);
+  const posicao = await descobrirPosicao(atualizado.id);
+  return toProfile(atualizado, posicao);
 }
 
-// Exclui a conta do usuário. Retorna Promise<void> (sem dado de retorno).
+// Exclui a conta do usuário logado (não há DELETE /me -> usamos /usuarios/{id}).
 export async function deleteAccount(): Promise<void> {
-  // await api.delete('/me'); // versão real (desativada)
-  return delay(undefined); // simula sucesso após o atraso
+  const me = await apiGet<UsuarioDto>('/usuarios/me');
+  await apiDelete<void>(`/usuarios/${me.id}`);
 }
