@@ -64,6 +64,16 @@ public class SelecaoViewController {
         return "redirect:/admin/selecoes";
     }
 
+    @PostMapping("/{id}/excluir")
+    public String excluir(
+            @PathVariable Long id
+    ) {
+
+        selecaoService.excluir(id);
+
+        return "redirect:/admin/selecoes";
+    }
+
     @PostMapping
     public String salvar(
             @ModelAttribute Selecao selecao
