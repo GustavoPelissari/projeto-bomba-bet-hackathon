@@ -1,7 +1,12 @@
 import React from 'react'; // necessário para JSX
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../constants/theme';   // tokens de design
 import type { Team } from '../types/domain';   // tipo do time
+
+// Detecta se a bandeira é uma URL (imagem) ou um emoji/texto.
+function isUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
+}
 
 // Props da linha de time.
 type Props = {
@@ -25,13 +30,22 @@ export default function TeamRow({ team, score, large, highlight }: Props) {
           : team.name
       }
     >
-      {/* Bandeira (emoji). accessible=false: já está no rótulo da linha. */}
-      <Text
-        style={[styles.flag, large && styles.flagLarge]}
-        accessible={false}
-      >
-        {team.flag}
-      </Text>
+      {/* Bandeira: se for URL, mostra a imagem; senão, mostra o emoji/texto. */}
+      {team.flag && isUrl(team.flag) ? (
+        <Image
+          source={{ uri: team.flag }}
+          style={[styles.flagImage, large && styles.flagImageLarge]}
+          resizeMode="cover"
+          accessible={false}
+        />
+      ) : (
+        <Text
+          style={[styles.flag, large && styles.flagLarge]}
+          accessible={false}
+        >
+          {team.flag}
+        </Text>
+      )}
       <View style={styles.names}>
         <Text
           style={[
@@ -61,10 +75,21 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,    // espaço entre os elementos
   },
   flag: {
-    fontSize: 24,             // tamanho normal da bandeira
+    fontSize: 24,             // tamanho normal da bandeira (emoji)
   },
   flagLarge: {
-    fontSize: 40,             // tamanho ampliado da bandeira
+    fontSize: 40,             // tamanho ampliado da bandeira (emoji)
+  },
+  flagImage: {
+    width: 32,                // bandeira por imagem (URL) — tamanho normal
+    height: 22,
+    borderRadius: 3,          // cantos levemente arredondados
+    backgroundColor: theme.colors.surfaceAlt, // fundo enquanto carrega
+  },
+  flagImageLarge: {
+    width: 56,                // bandeira por imagem — tamanho grande (tela de detalhes)
+    height: 38,
+    borderRadius: 4,
   },
   names: {
     flex: 1,                  // ocupa o espaço do meio (empurra o placar p/ a direita)

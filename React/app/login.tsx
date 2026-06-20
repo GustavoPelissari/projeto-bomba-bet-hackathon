@@ -36,9 +36,14 @@ export default function LoginScreen() {
     setError(null);     // limpa erros anteriores
     setLoading(true);   // ativa o carregamento
     try {
-      // TODO POST /auth/login
-      await login(email, password);   // faz login (hoje é mock)
+      // Faz login na API (POST /api/auth/login) — guarda o token e busca o perfil.
+      await login(email, password);
       router.replace('/(tabs)');      // vai para a área logada (abas) - replace = sem voltar p/ login
+    } catch (e) {
+      // Credenciais inválidas ou backend fora do ar.
+      setError(
+        e instanceof Error ? e.message : 'E-mail ou senha inválidos.'
+      );
     } finally {
       setLoading(false); // desativa o carregamento, mesmo se der erro
     }

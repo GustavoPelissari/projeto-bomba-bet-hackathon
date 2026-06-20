@@ -1,0 +1,3 @@
+com\example\bombaBet\api\dto\usuario\RecuperarSenhaRequestDto.class
+com\example\bombaBet\api\exception\ApiExceptionHandler.class
+com\example\bombaBet\api\dto\usuario\RedefinirSenhaRequestDto.class

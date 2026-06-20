@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'; // React + hooks
 import {
   Alert,             // caixa de diálogo nativa (confirmações)
+  Image,             // exibe a foto de perfil (quando for URL)
   ScrollView,
   StyleSheet,
   Text,
@@ -132,9 +133,19 @@ export default function ProfileScreen() {
         {/* Cabeçalho do usuário */}
         {/* Avatar (inicial), nome e e-mail */}
         <View style={styles.head}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initialOf(profile.name)}</Text>
-          </View>
+          {profile.avatar ? (
+            // Tem foto (URL) -> exibe a imagem.
+            <Image
+              source={{ uri: profile.avatar }}
+              style={styles.avatar}
+              accessibilityLabel="Foto de perfil"
+            />
+          ) : (
+            // Sem foto -> mostra a inicial do nome.
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initialOf(profile.name)}</Text>
+            </View>
+          )}
           <Text style={styles.name}>{profile.name}</Text>
           <Text style={styles.email}>{profile.email}</Text>
         </View>

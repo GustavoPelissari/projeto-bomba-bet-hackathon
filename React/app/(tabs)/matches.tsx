@@ -75,6 +75,7 @@ export default function MatchesScreen() {
   const [error, setError] = useState<string | null>(null);     // erro?
   const [phase, setPhase] = useState<PhaseFilter>('ALL');      // filtro de fase atual
   const [status, setStatus] = useState<StatusFilter>('ALL');   // filtro de situação atual
+  const [date, setDate] = useState<string>('ALL');            // filtro de data (yyyy-mm-dd) ou 'ALL'
 
   // Carrega as partidas do serviço.
   const load = useCallback(async () => {
@@ -94,13 +95,29 @@ export default function MatchesScreen() {
     load();
   }, [load]);
 
+  // Datas disponíveis (extraídas das partidas) para o filtro por data.
+  // Cada partida vira o dia "yyyy-mm-dd"; mantemos os dias únicos, ordenados.
+  const dateChips = useMemo(() => {
+    const dias = Array.from(
+      new Set(matches.map((m) => m.datetime.slice(0, 10)))
+    ).sort();
+    return [
+      { key: 'ALL', label: 'Todas' },
+      ...dias.map((d) => {
+        const [, mes, dia] = d.split('-'); // "yyyy-mm-dd" -> dd/mm
+        return { key: d, label: `${dia}/${mes}` };
+      }),
+    ];
+  }, [matches]);
+
   // Monta as seções da lista. useMemo recalcula só quando partidas/filtros mudam
   // (evita refazer esse trabalho a cada render).
   const sections = useMemo(() => {
-    // 1) Aplica os filtros de fase e status.
+    // 1) Aplica os filtros de fase, status e data.
     const filtered = matches.filter((m) => {
       if (phase !== 'ALL' && m.phase !== phase) return false;
       if (status !== 'ALL' && m.status !== status) return false;
+      if (date !== 'ALL' && !m.datetime.startsWith(date)) return false;
       return true;
     });
 
@@ -115,7 +132,7 @@ export default function MatchesScreen() {
             new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
         ),
     })).filter((s) => s.data.length > 0); // remove seções vazias
-  }, [matches, phase, status]);
+  }, [matches, phase, status, date]);
 
   // Bloco reutilizável dos filtros (duas linhas roláveis de chips).
   const Filters = (
@@ -147,6 +164,21 @@ export default function MatchesScreen() {
             label={c.label}
             selected={status === c.key}
             onPress={() => setStatus(c.key)}
+          />
+        ))}
+      </ScrollView>
+      {/* Linha de filtros por data (gerada a partir das partidas) */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
+        {dateChips.map((c) => (
+          <Chip
+            key={c.key}
+            label={c.label}
+            selected={date === c.key}
+            onPress={() => setDate(c.key)}
           />
         ))}
       </ScrollView>

@@ -11,22 +11,28 @@ import {
 import { Ionicons } from '@expo/vector-icons'; // ícones
 import { router } from 'expo-router';            // navegação imperativa
 import { theme } from '../constants/theme';      // tokens de design
+import { forgotPassword, resetPassword } from '../services/authService'; // RF-003
 import Button from '../components/Button';
 import Input from '../components/Input';
 
 // Regex para validar formato de e-mail.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Tela de recuperação de senha.
-export default function ForgotPasswordScreen() {
-  const [email, setEmail] = useState('');                   // estado do e-mail
-  const [error, setError] = useState<string | null>(null);  // mensagem de erro
-  const [loading, setLoading] = useState(false);            // spinner do botão
-  const [sent, setSent] = useState(false);                  // já enviou o link? (muda a tela)
+// Etapas do fluxo de recuperação de senha.
+type Stage = 'request' | 'reset' | 'done';
 
-  // Executa ao tocar em "Enviar link".
-  const onSubmit = async () => {
-    // Valida o e-mail antes de "enviar".
+// Tela de recuperação de senha (RF-003).
+export default function ForgotPasswordScreen() {
+  const [stage, setStage] = useState<Stage>('request'); // etapa atual
+  const [email, setEmail] = useState('');               // e-mail informado
+  const [token, setToken] = useState('');               // código de recuperação
+  const [password, setPassword] = useState('');         // nova senha
+  const [confirm, setConfirm] = useState('');           // confirmação da nova senha
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Etapa 1: solicita o token de recuperação para o e-mail.
+  const onRequest = async () => {
     if (!EMAIL_RE.test(email)) {
       setError('Informe um e-mail válido.');
       return;
@@ -34,9 +40,41 @@ export default function ForgotPasswordScreen() {
     setError(null);
     setLoading(true);
     try {
-      // TODO POST /auth/forgot-password
-      await new Promise((r) => setTimeout(r, 600)); // simula a espera da rede (600ms)
-      setSent(true); // marca como enviado -> mostra a mensagem de sucesso
+      const t = await forgotPassword(email); // chama a API e recebe o token
+      setToken(t);                           // pré-preenche o código
+      setStage('reset');                     // avança para a redefinição
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : 'Não foi possível solicitar a recuperação.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Etapa 2: redefine a senha usando o token.
+  const onReset = async () => {
+    if (!token.trim()) {
+      setError('Informe o código de recuperação.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('A nova senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    try {
+      await resetPassword(token.trim(), password); // troca a senha na API
+      setStage('done');                            // mostra a confirmação
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : 'Não foi possível redefinir a senha.'
+      );
     } finally {
       setLoading(false);
     }
@@ -53,42 +91,25 @@ export default function ForgotPasswordScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          {/* Círculo com ícone que muda conforme já enviou ou não. */}
+          {/* Ícone que reflete a etapa atual. */}
           <View style={styles.iconCircle}>
             <Ionicons
-              name={sent ? 'mail-open-outline' : 'lock-closed-outline'}
+              name={stage === 'done' ? 'checkmark-circle-outline' : 'lock-closed-outline'}
               size={32}
               color={theme.colors.accent}
               accessible={false}
             />
           </View>
 
-          {sent ? (
-            // ----- Estado: link já enviado -----
-            // <> </> é um Fragment: agrupa elementos sem criar uma View extra.
-            <>
-              <Text style={styles.title} accessibilityRole="header">
-                E-mail enviado
-              </Text>
-              <Text style={styles.description} accessibilityLiveRegion="polite">
-                Enviamos um link para {email}. Verifique sua caixa de entrada.
-              </Text>
-              <Button
-                title="Voltar ao login"
-                icon="arrow-back"
-                onPress={() => router.back()} // volta à tela anterior
-                style={styles.submit}
-              />
-            </>
-          ) : (
-            // ----- Estado: formulário inicial -----
+          {stage === 'request' && (
+            // ----- Etapa 1: informar o e-mail -----
             <>
               <Text style={styles.title} accessibilityRole="header">
                 Recuperar senha
               </Text>
               <Text style={styles.description}>
-                Informe o e-mail da sua conta para receber o link de redefinição
-                de senha.
+                Informe o e-mail da sua conta para receber o código de
+                redefinição de senha.
               </Text>
 
               <Input
@@ -103,13 +124,8 @@ export default function ForgotPasswordScreen() {
                 error={error}
               />
 
-              <Button
-                title="Enviar link"
-                onPress={onSubmit}
-                loading={loading}
-              />
+              <Button title="Enviar código" onPress={onRequest} loading={loading} />
 
-              {/* Link de texto para voltar ao login */}
               <TouchableOpacity
                 style={styles.backLink}
                 onPress={() => router.back()}
@@ -118,6 +134,73 @@ export default function ForgotPasswordScreen() {
               >
                 <Text style={styles.backLinkText}>Voltar ao login</Text>
               </TouchableOpacity>
+            </>
+          )}
+
+          {stage === 'reset' && (
+            // ----- Etapa 2: código + nova senha -----
+            <>
+              <Text style={styles.title} accessibilityRole="header">
+                Redefinir senha
+              </Text>
+              <Text style={styles.description}>
+                Em produção o código vai por e-mail. Para teste, ele já foi
+                preenchido abaixo. Defina sua nova senha.
+              </Text>
+
+              <Input
+                label="Código de recuperação"
+                icon="key-outline"
+                value={token}
+                onChangeText={setToken}
+                autoCapitalize="none"
+              />
+              <Input
+                label="Nova senha"
+                icon="lock-closed-outline"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Mínimo 6 caracteres"
+                secureTextEntry
+              />
+              <Input
+                label="Confirmar nova senha"
+                icon="lock-closed-outline"
+                value={confirm}
+                onChangeText={setConfirm}
+                placeholder="Repita a senha"
+                secureTextEntry
+                error={error}
+              />
+
+              <Button title="Redefinir senha" onPress={onReset} loading={loading} />
+
+              <TouchableOpacity
+                style={styles.backLink}
+                onPress={() => router.back()}
+                accessibilityRole="link"
+                accessibilityLabel="Voltar ao login"
+              >
+                <Text style={styles.backLinkText}>Voltar ao login</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {stage === 'done' && (
+            // ----- Etapa 3: sucesso -----
+            <>
+              <Text style={styles.title} accessibilityRole="header">
+                Senha redefinida!
+              </Text>
+              <Text style={styles.description} accessibilityLiveRegion="polite">
+                Sua senha foi alterada com sucesso. Faça login com a nova senha.
+              </Text>
+              <Button
+                title="Ir para o login"
+                icon="arrow-back"
+                onPress={() => router.replace('/login')}
+                style={styles.submit}
+              />
             </>
           )}
         </View>
@@ -155,7 +238,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: theme.radius.full,         // círculo perfeito
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',

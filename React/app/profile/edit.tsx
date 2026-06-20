@@ -63,7 +63,7 @@ export default function EditProfileScreen() {
     }
     // Abre a galeria com opção de recorte quadrado (1:1).
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // só imagens
+      mediaTypes: ['images'], // só imagens (API nova do expo-image-picker)
       allowsEditing: true,                             // permite recortar
       aspect: [1, 1],                                  // proporção quadrada
       quality: 0.7,                                    // compressão (0 a 1)
@@ -84,8 +84,9 @@ export default function EditProfileScreen() {
     setNameError(null);
     setSaving(true);
     try {
-      // TODO PUT /me
-      await updateProfile({ name: name.trim(), avatar }); // envia nome + avatar
+      // Normaliza a URL: remove espaços; se ficar vazia, salva como "sem foto" (null).
+      const fotoUrl = avatar && avatar.trim() ? avatar.trim() : null;
+      await updateProfile({ name: name.trim(), avatar: fotoUrl }); // envia nome + foto
       router.back();                                       // volta à tela anterior
     } catch {
       setError('Não foi possível salvar as alterações.');
@@ -144,11 +145,11 @@ export default function EditProfileScreen() {
               <Text style={styles.avatarText}>{initialOf(name || profile.name)}</Text>
             </View>
           )}
-          {/* Botão para trocar a foto (abre a galeria) */}
+          {/* Botão para escolher a foto da galeria (alternativa à URL) */}
           <TouchableOpacity
             onPress={pickImage}
             accessibilityRole="button"
-            accessibilityLabel="Alterar foto"
+            accessibilityLabel="Escolher da galeria"
             style={styles.changePhoto}
           >
             <Ionicons
@@ -157,9 +158,21 @@ export default function EditProfileScreen() {
               color={theme.colors.accent}
               accessible={false}
             />
-            <Text style={styles.changePhotoText}>Alterar foto</Text>
+            <Text style={styles.changePhotoText}>Escolher da galeria</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Foto por URL */}
+        {/* Cole o link de uma imagem; a pré-visualização acima atualiza ao digitar. */}
+        <Input
+          label="Foto de perfil (URL)"
+          icon="image-outline"
+          value={avatar ?? ''}
+          onChangeText={setAvatar}
+          placeholder="https://exemplo.com/foto.jpg"
+          autoCapitalize="none"
+          keyboardType="url"
+        />
 
         {/* Nome */}
         {/* Campo editável do nome de exibição */}

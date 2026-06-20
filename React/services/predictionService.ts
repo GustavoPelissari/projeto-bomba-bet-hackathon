@@ -1,73 +1,79 @@
-// import api from './api'; // (desativado) cliente HTTP real para o futuro backend
-import { MOCK_PREDICTIONS } from '../mocks/predictions'; // palpites falsos iniciais
-import { MOCK_MATCHES } from '../mocks/matches';         // partidas falsas (p/ validar regras)
-import type { Prediction } from '../types/domain';       // tipo do palpite
+import { apiGet, apiPost, apiPut } from './api';
+import type { Prediction, PredictionCriterion } from '../types/domain';
 
-// Atraso artificial para simular latência de rede.
-const DELAY = 400;
+// Formato cru de um palpite vindo da API (PalpiteResponseDto).
+type PalpiteDto = {
+  id: number;
+  partidaId: number;
+  usuario: string;
+  golsCasa: number;
+  golsVisitante: number;
+  pontuacao: number | null;
+  criterioPontuacao: string; // PENDENTE, PLACAR_EXATO, VENCEDOR_OU_EMPATE, ERRO_TOTAL
+};
 
-// cópia mutável em memória para simular persistência durante a sessão
-// "[...MOCK_PREDICTIONS]" cria uma cópia do array para não alterar o original.
-let predictions: Prediction[] = [...MOCK_PREDICTIONS];
-// Calcula o próximo id disponível: maior id existente + 1 (ou 1 se a lista for vazia).
-let nextId = Math.max(...MOCK_PREDICTIONS.map((p) => p.id), 0) + 1;
-
-// Função genérica que resolve um valor após DELAY ms (simula chamada assíncrona).
-function delay<T>(value: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), DELAY));
+// Converte o critério da API para o do app (null = ainda não apurado).
+function mapCriterion(c: string): PredictionCriterion | null {
+  switch (c) {
+    case 'PLACAR_EXATO':
+      return 'EXACT';
+    case 'VENCEDOR_OU_EMPATE':
+      return 'WINNER';
+    case 'ERRO_TOTAL':
+      return 'MISS';
+    default:
+      return null; // PENDENTE
+  }
 }
 
-// Lista todos os palpites do usuário atual.
+// Converte PalpiteDto -> Prediction.
+function toPrediction(p: PalpiteDto): Prediction {
+  const criterion = mapCriterion(p.criterioPontuacao);
+  return {
+    id: p.id,
+    matchId: p.partidaId,
+    homeGuess: p.golsCasa,
+    awayGuess: p.golsVisitante,
+    // Enquanto está PENDENTE (criterion null), mostramos pontos como null.
+    points: criterion ? p.pontuacao ?? 0 : null,
+    criterion,
+  };
+}
+
+// Lista os palpites do usuário logado (GET /api/palpites/meus — exige token).
 export async function listMyPredictions(): Promise<Prediction[]> {
-  // return (await api.get('/predictions/me')).data; // versão real (desativada)
-  return delay([...predictions]); // devolve uma cópia da lista após o atraso
+  const lista = await apiGet<PalpiteDto[]>('/palpites/meus');
+  return lista.map(toPrediction);
 }
 
-// Busca o palpite de uma partida específica (ou null se não houver).
+// Busca o palpite do usuário para uma partida específica (ou null).
 export async function getPredictionByMatch(
   matchId: number
 ): Promise<Prediction | null> {
-  // return (await api.get(`/predictions?matchId=${matchId}`)).data; // versão real (desativada)
-  // find() retorna o palpite com aquele matchId; "?? null" garante null se não achar.
-  return delay(predictions.find((p) => p.matchId === matchId) ?? null);
+  const lista = await apiGet<PalpiteDto[]>('/palpites/meus');
+  const encontrado = lista.find((p) => p.partidaId === matchId);
+  return encontrado ? toPrediction(encontrado) : null;
 }
 
-// Cria ou atualiza o palpite do usuário para uma partida.
+// Cria (POST) ou atualiza (PUT) o palpite do usuário para uma partida.
 export async function savePrediction(
-  matchId: number, // id da partida
-  home: number,    // placar palpitado para o mandante
-  away: number     // placar palpitado para o visitante
+  matchId: number,
+  home: number,
+  away: number
 ): Promise<Prediction> {
-  // return (await api.post('/predictions', { matchId, home, away })).data; // versão real (desativada)
-  // Localiza a partida para validar se ainda é permitido palpitar.
-  const match = MOCK_MATCHES.find((m) => m.id === matchId);
-  // Regra: só pode palpitar em partida existente e ainda AGENDADA (não iniciada).
-  if (!match || match.status !== 'SCHEDULED') {
-    // Caso contrário, rejeita com erro "Palpite bloqueado" após o atraso.
-    return new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Palpite bloqueado')), DELAY)
-    );
-  }
-  // Verifica se já existe um palpite para esta partida (para atualizar em vez de criar).
-  const existing = predictions.find((p) => p.matchId === matchId);
-  let saved: Prediction; // guardará o palpite final (novo ou atualizado)
-  if (existing) {
-    // Já existe: cria uma cópia com os novos placares (atualização).
-    saved = { ...existing, homeGuess: home, awayGuess: away };
-    // Substitui o antigo pelo atualizado dentro do array.
-    predictions = predictions.map((p) => (p.id === existing.id ? saved : p));
-  } else {
-    // Não existe: monta um palpite novo do zero.
-    saved = {
-      id: nextId++, // usa o próximo id e incrementa o contador
-      matchId,
-      homeGuess: home,
-      awayGuess: away,
-      points: null,    // ainda não pontuado
-      criterion: null, // ainda não apurado
-    };
-    // Adiciona o novo palpite à lista (cópia com o item extra no fim).
-    predictions = [...predictions, saved];
-  }
-  return delay(saved); // devolve o palpite salvo após o atraso
+  // Descobre se já existe palpite desta partida (para decidir POST x PUT).
+  const lista = await apiGet<PalpiteDto[]>('/palpites/meus');
+  const existente = lista.find((p) => p.partidaId === matchId);
+
+  const body = {
+    partidaId: matchId,
+    golsCasa: home,
+    golsVisitante: away,
+  };
+
+  const salvo = existente
+    ? await apiPut<PalpiteDto>(`/palpites/${existente.id}`, body) // edita
+    : await apiPost<PalpiteDto>('/palpites', body); // cria
+
+  return toPrediction(salvo);
 }
