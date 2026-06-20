@@ -16,6 +16,7 @@ C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\s
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\RedefinirSenhaRequestDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\UsuarioRequestDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\UsuarioResponseDto.java
+C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\exception\ApiExceptionHandler.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\PalpiteApi.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\PartidaApi.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\SelecaoApi.java
