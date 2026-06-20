@@ -43,8 +43,8 @@ public class SecurityConfig {
                         // THYMELEAF
                         .requestMatchers(
                                 "/login",
-                                "/admin",
-                                "/admin/**"
+                                "/templates/admin",
+                                "/templates/admin/**"
                         )
                         .permitAll()
 

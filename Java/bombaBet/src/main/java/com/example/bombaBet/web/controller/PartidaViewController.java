@@ -28,7 +28,7 @@ public class PartidaViewController {
 
     @GetMapping("/nova")
     public String formulario() {
-        return "admin/partidas/form";
+        return "/admin/partidas/form";
     }
 
     @GetMapping("/{id}/resultado")
