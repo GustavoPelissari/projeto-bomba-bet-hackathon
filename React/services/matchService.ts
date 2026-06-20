@@ -37,6 +37,8 @@ function mapStatus(status: string): MatchStatus {
 
 function mapPhase(fase: string): Phase {
   switch (fase) {
+    case 'DEZESSEIS_AVOS_DE_FINAL':
+      return 'ROUND_32';
     case 'OITAVAS_DE_FINAL':
       return 'ROUND_16';
     case 'QUARTAS_DE_FINAL':

@@ -24,6 +24,7 @@ type StatusFilter = 'ALL' | MatchStatus;
 const PHASE_CHIPS: { key: PhaseFilter; label: string }[] = [
   { key: 'ALL', label: 'Todas' },
   { key: 'GROUP', label: 'Grupos' },
+  { key: 'ROUND_32', label: '16-avos' },
   { key: 'ROUND_16', label: 'Oitavas' },
   { key: 'QUARTER', label: 'Quartas' },
   { key: 'SEMI', label: 'Semi' },
@@ -39,7 +40,7 @@ const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
 ];
 
 // Ordem em que as seções (fases) aparecem na lista.
-const PHASE_ORDER: Phase[] = ['GROUP', 'ROUND_16', 'QUARTER', 'SEMI', 'FINAL'];
+const PHASE_ORDER: Phase[] = ['GROUP', 'ROUND_32', 'ROUND_16', 'QUARTER', 'SEMI', 'FINAL'];
 
 // Componente de um "chip" (botão de filtro arredondado).
 function Chip({
