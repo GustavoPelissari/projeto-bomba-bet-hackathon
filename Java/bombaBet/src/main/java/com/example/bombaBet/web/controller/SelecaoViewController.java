@@ -36,6 +36,34 @@ public class SelecaoViewController {
         return "admin/selecoes/form";
     }
 
+    @GetMapping("/{id}/editar")
+    public String editar(
+            @PathVariable Long id,
+            Model model
+    ) {
+
+        model.addAttribute(
+                "selecao",
+                selecaoService.buscarPorId(id)
+        );
+
+        return "admin/selecoes/form";
+    }
+
+    @PostMapping("/{id}/editar")
+    public String atualizar(
+            @PathVariable Long id,
+            @ModelAttribute Selecao selecao
+    ) {
+
+        selecaoService.atualizar(
+                id,
+                selecao
+        );
+
+        return "redirect:/admin/selecoes";
+    }
+
     @PostMapping
     public String salvar(
             @ModelAttribute Selecao selecao
