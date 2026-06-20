@@ -15,12 +15,17 @@ public class SelecaoViewController {
     private final SelecaoService selecaoService;
 
     @GetMapping
-    public String listar(Model model) {
-
-        model.addAttribute(
-                "selecoes",
-                selecaoService.listarTodas()
-        );
+    public String listar(
+            @RequestParam(required = false) String nome,
+            Model model
+    ) {
+        // Se houver termo de busca, filtra por nome; senão, lista todas.
+        if (nome != null && !nome.isBlank()) {
+            model.addAttribute("selecoes", selecaoService.pesquisarPorNome(nome));
+        } else {
+            model.addAttribute("selecoes", selecaoService.listarTodas());
+        }
+        model.addAttribute("nome", nome); // mantém o texto digitado no campo
 
         return "admin/selecoes/lista";
     }
