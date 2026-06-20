@@ -36,18 +36,32 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        .requestMatchers(HttpMethod.GET,
-                                "/selecoes/**",
-                                "/partidas/**")
+                        // API AUTH
+                        .requestMatchers("/api/auth/**")
                         .permitAll()
 
+                        // THYMELEAF
+                        .requestMatchers(
+                                "/login",
+                                "/admin",
+                                "/admin/**"
+                        )
+                        .permitAll()
+
+                        // CONSULTAS PÚBLICAS
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/selecoes/**",
+                                "/partidas/**"
+                        )
+                        .permitAll()
+
+                        // ROTAS PROTEGIDAS
                         .requestMatchers("/palpites/**")
                         .authenticated()
 
                         .anyRequest()
-                        .authenticated()
+                        .permitAll()
                 )
 
                 .addFilterBefore(
