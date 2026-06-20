@@ -197,6 +197,7 @@ public class PartidaApi {
                 .dataHora(partida.getDataHora())
                 .estadio(partida.getEstadio())
                 .fase(partida.getFase())
+                .grupo(partida.getGrupo()) // estava faltando -> a API não retornava o grupo
                 .status(partida.getStatus())
                 .golsCasa(partida.getGolsCasa())
                 .golsVisitante(partida.getGolsVisitante())
