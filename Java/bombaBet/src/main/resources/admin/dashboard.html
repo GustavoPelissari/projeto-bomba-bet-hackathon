@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | BombaBet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div th:replace="~{fragments/navbar-admin :: navbar}"></div>
+
+<main class="container py-4">
+
+    <div class="mb-4">
+        <h1 class="fw-bold">Dashboard</h1>
+        <p class="text-muted">
+            Acompanhe os principais indicadores do sistema.
+        </p>
+    </div>
+
+    <div th:if="${mensagem}" class="alert alert-success" th:text="${mensagem}"></div>
+    <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Total de usuários ativos</p>
+                    <h3 class="fw-bold" th:text="${totalUsuariosAtivos}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Usuários ativos nas últimas 24h</p>
+                    <h3 class="fw-bold" th:text="${usuariosAtivosUltimas24h}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Partidas pendentes de resultado</p>
+                    <h3 class="fw-bold" th:text="${partidasPendentesResultado}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Total de palpites</p>
+                    <h3 class="fw-bold" th:text="${totalPalpites}">0</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="fw-bold">Ações rápidas</h5>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a th:href="@{/admin/selecoes/nova}" class="btn btn-primary">
+                    Nova seleção
+                </a>
+
+                <a th:href="@{/admin/partidas/nova}" class="btn btn-outline-primary">
+                    Nova partida
+                </a>
+
+                <a th:href="@{/admin/usuarios}" class="btn btn-outline-secondary">
+                    Ver usuários
+                </a>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+</body>
+</html>
