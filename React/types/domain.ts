@@ -4,8 +4,8 @@
  * para estes tipos. Assim as telas continuam usando nomes em inglês.
  */
 
-// Fases do torneio. THIRD = disputa de 3º lugar (DISPUTA_TERCEIRO_LUGAR na API).
-export type Phase = 'GROUP' | 'ROUND_16' | 'QUARTER' | 'SEMI' | 'THIRD' | 'FINAL';
+// Fases do torneio. ROUND_32 = 16-avos; THIRD = disputa de 3º lugar.
+export type Phase = 'GROUP' | 'ROUND_32' | 'ROUND_16' | 'QUARTER' | 'SEMI' | 'THIRD' | 'FINAL';
 
 // Situação da partida.
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED';

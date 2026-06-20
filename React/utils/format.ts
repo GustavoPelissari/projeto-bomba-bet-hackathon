@@ -3,6 +3,7 @@ import type { Phase } from '../types/domain';
 // Rótulos das fases em português.
 const PHASE_LABELS: Record<Phase, string> = {
   GROUP: 'Fase de Grupos',
+  ROUND_32: '16-avos de Final',
   ROUND_16: 'Oitavas de Final',
   QUARTER: 'Quartas de Final',
   SEMI: 'Semifinal',

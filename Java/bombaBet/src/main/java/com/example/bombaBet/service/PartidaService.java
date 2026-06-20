@@ -26,6 +26,7 @@ public class PartidaService {
 
     private static final Set<String> FASES_PERMITIDAS = Set.of(
             "GRUPOS",
+            "DEZESSEIS_AVOS_DE_FINAL",
             "OITAVAS_DE_FINAL",
             "QUARTAS_DE_FINAL",
             "SEMIFINAL",
