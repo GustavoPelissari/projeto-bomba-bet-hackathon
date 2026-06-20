@@ -50,13 +50,10 @@
             <div class="d-flex align-items-center gap-3 text-white">
                 <span class="small">
                     Logado como:
-                    <strong sec:authentication="name">admin</strong>
+                    <strong>admin</strong>
                 </span>
 
                 <form th:action="@{/logout}" method="post" class="m-0">
-                    <input type="hidden"
-                           th:name="${_csrf.parameterName}"
-                           th:value="${_csrf.token}">
 
                     <button type="submit" class="btn btn-outline-light btn-sm">
                         Sair
