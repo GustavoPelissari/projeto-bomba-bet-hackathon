@@ -2,6 +2,8 @@ package com.example.bombaBet.api;
 
 import com.example.bombaBet.api.dto.usuario.LoginRequestDto;
 import com.example.bombaBet.api.dto.usuario.LoginResponseDto;
+import com.example.bombaBet.api.dto.usuario.RecuperarSenhaRequestDto;
+import com.example.bombaBet.api.dto.usuario.RedefinirSenhaRequestDto;
 import com.example.bombaBet.api.dto.usuario.UsuarioRequestDto;
 import com.example.bombaBet.api.dto.usuario.UsuarioResponseDto;
 import com.example.bombaBet.model.Usuario;
@@ -15,6 +17,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -66,6 +70,32 @@ public class AuthApi {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    // RF-003 — Solicita a recuperação de senha: gera um token de redefinição.
+    // (Sem servidor de e-mail, o token é devolvido na resposta para o app usar.)
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> esqueciMinhaSenha(
+            @RequestBody RecuperarSenhaRequestDto request
+    ) {
+        String token = usuarioService.gerarTokenRecuperacao(request.getEmail());
+
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "mensagem", "Token de recuperação gerado. Em produção, seria enviado por e-mail."
+        ));
+    }
+
+    // RF-003 — Redefine a senha usando o token recebido.
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> redefinirSenha(
+            @RequestBody RedefinirSenhaRequestDto request
+    ) {
+        usuarioService.redefinirSenha(request.getToken(), request.getNovaSenha());
+
+        return ResponseEntity.ok(Map.of(
+                "mensagem", "Senha redefinida com sucesso."
+        ));
     }
 
     private Usuario converterParaEntidade(

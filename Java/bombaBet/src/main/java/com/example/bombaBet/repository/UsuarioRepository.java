@@ -16,6 +16,10 @@ public interface UsuarioRepository
             String email
     );
 
+    Optional<Usuario> findByResetToken(
+            String resetToken
+    );
+
     boolean existsByEmailIgnoreCase(
             String email
     );

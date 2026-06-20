@@ -65,6 +65,13 @@ public class Usuario implements UserDetails {
     @Column(name = "ultimo_acesso")
     private LocalDateTime ultimoAcesso;
 
+    // Token de recuperação de senha (RF-003) e sua validade.
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expira_em")
+    private LocalDateTime resetTokenExpiraEm;
+
     @PrePersist
     public void antesDeSalvar() {
         if (criadoEm == null) {

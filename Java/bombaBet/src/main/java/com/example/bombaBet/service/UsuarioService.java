@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,52 @@ public class UsuarioService implements UserDetailsService {
                                 "Usuário não encontrado com o e-mail informado"
                         )
                 );
+    }
+
+    /*
+     * RF-003 — Gera um token de recuperação de senha para o e-mail informado.
+     * O token vale por 1 hora. (Em produção, seria enviado por e-mail;
+     * aqui ele é retornado para o app, pois não há servidor SMTP configurado.)
+     */
+    @Transactional
+    public String gerarTokenRecuperacao(String email) {
+        Usuario usuario = buscarPorEmail(email); // lança erro se o e-mail não existir
+
+        String token = UUID.randomUUID().toString();
+        usuario.setResetToken(token);
+        usuario.setResetTokenExpiraEm(LocalDateTime.now().plusHours(1));
+
+        usuarioRepository.save(usuario);
+        return token;
+    }
+
+    /*
+     * RF-003 — Redefine a senha a partir de um token válido (e não expirado).
+     */
+    @Transactional
+    public void redefinirSenha(String token, String novaSenha) {
+        if (novaSenha == null || novaSenha.length() < 6) {
+            throw new IllegalArgumentException(
+                    "A nova senha deve ter ao menos 6 caracteres"
+            );
+        }
+
+        Usuario usuario = usuarioRepository.findByResetToken(token)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Token inválido")
+                );
+
+        if (usuario.getResetTokenExpiraEm() == null
+                || usuario.getResetTokenExpiraEm().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token expirado. Solicite um novo.");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(novaSenha));
+        // Invalida o token após o uso.
+        usuario.setResetToken(null);
+        usuario.setResetTokenExpiraEm(null);
+
+        usuarioRepository.save(usuario);
     }
 
     public List<Usuario> pesquisar(String termo) {
