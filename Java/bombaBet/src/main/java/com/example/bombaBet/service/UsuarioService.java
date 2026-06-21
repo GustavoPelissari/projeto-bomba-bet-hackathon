@@ -1,6 +1,7 @@
 package com.example.bombaBet.service;
 
 import com.example.bombaBet.model.Usuario;
+import com.example.bombaBet.repository.PalpiteRepository;
 import com.example.bombaBet.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.function.Consumer;
 public class UsuarioService implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PalpiteRepository palpiteRepository;
     private final PasswordEncoder passwordEncoder;
 
     // ---------------- Consultas ----------------
@@ -180,7 +182,10 @@ public class UsuarioService implements UserDetailsService {
 
     @Transactional
     public void excluir(Long usuarioId) {
-        usuarioRepository.delete(buscarPorId(usuarioId));
+        Usuario usuario = buscarPorId(usuarioId);
+        // Remove os palpites do usuário antes (senão a FK bloqueia a exclusão).
+        palpiteRepository.deleteByUsuario(usuario);
+        usuarioRepository.delete(usuario);
     }
 
     @Transactional

@@ -127,6 +127,15 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </Link>
           </View>
+
+          {/* Acesso público: visitante vê só o ranking (sem login). */}
+          <Button
+            title="Acessar Ranking"
+            variant="ghost"
+            icon="trophy-outline"
+            onPress={() => router.push('/ranking-publico')}
+            style={styles.visitorBtn}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -204,6 +213,9 @@ const styles = StyleSheet.create({
   },
   submit: {
     marginTop: theme.spacing.md,
+  },
+  visitorBtn: {
+    marginTop: theme.spacing.lg, // botão de acesso ao ranking como visitante
   },
   footer: {
     flexDirection: 'row',            // texto + link na mesma linha
