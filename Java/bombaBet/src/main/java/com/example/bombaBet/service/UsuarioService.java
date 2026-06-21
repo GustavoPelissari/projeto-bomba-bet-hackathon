@@ -57,14 +57,6 @@ public class UsuarioService implements UserDetailsService {
                 .findByAtivoTrueOrderByPontuacaoTotalDescPlacaresExatosDescCriadoEmAsc(pageable);
     }
 
-    public long contarUsuariosAtivos() {
-        return usuarioRepository.countByAtivoTrue();
-    }
-
-    public long contarUsuariosAtivosNasUltimas24Horas() {
-        return usuarioRepository.countByUltimoAcessoAfter(LocalDateTime.now().minusHours(24));
-    }
-
     // ---------------- Recuperação de senha (RF-003) ----------------
 
     // Gera um token de recuperação válido por 1 hora (devolvido ao app, pois não há SMTP).

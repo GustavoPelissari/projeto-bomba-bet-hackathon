@@ -52,10 +52,6 @@ public class PartidaService {
                 new EntityNotFoundException("Partida não encontrada com o ID: " + id));
     }
 
-    public List<Partida> listarProximasPartidas() {
-        return partidaRepository.findByDataHoraAfterOrderByDataHoraAsc(LocalDateTime.now());
-    }
-
     public List<Partida> listarProximasDezPartidas() {
         return partidaRepository.findTop10ByDataHoraAfterAndStatusIgnoreCaseOrderByDataHoraAsc(
                 LocalDateTime.now(), "AGENDADA");
@@ -80,10 +76,6 @@ public class PartidaService {
         }
         return partidaRepository.findByDataHoraBetweenOrderByDataHoraAsc(
                 data.atStartOfDay(), data.plusDays(1).atStartOfDay());
-    }
-
-    public long contarPartidasPendentesDeResultado() {
-        return partidaRepository.countByStatusIgnoreCase("AGENDADA");
     }
 
     // ---------------- Cadastro / edição ----------------
@@ -122,21 +114,6 @@ public class PartidaService {
         partida.setFase(fase);
         partida.setGrupo(normalizarGrupo(dados.getGrupo(), fase));
 
-        return partidaRepository.save(partida);
-    }
-
-    @Transactional
-    public Partida alterarStatus(Long id, String novoStatus) {
-        Partida partida = buscarPorId(id);
-        String status = normalizarStatus(novoStatus);
-
-        if ("ENCERRADA".equals(status)
-                && (partida.getGolsCasa() == null || partida.getGolsVisitante() == null)) {
-            throw new IllegalStateException(
-                    "Não é possível encerrar uma partida sem informar o resultado");
-        }
-
-        partida.setStatus(status);
         return partidaRepository.save(partida);
     }
 

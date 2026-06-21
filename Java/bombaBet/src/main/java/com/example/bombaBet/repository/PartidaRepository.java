@@ -9,10 +9,6 @@ import java.util.List;
 public interface PartidaRepository
         extends JpaRepository<Partida, Long> {
 
-    List<Partida> findByDataHoraAfterOrderByDataHoraAsc(
-            LocalDateTime agora
-    );
-
     List<Partida> findByDataHoraBetweenOrderByDataHoraAsc(
             LocalDateTime inicio,
             LocalDateTime fim
@@ -33,10 +29,6 @@ public interface PartidaRepository
 
     List<Partida> findTop10ByDataHoraAfterAndStatusIgnoreCaseOrderByDataHoraAsc(
             LocalDateTime agora,
-            String status
-    );
-
-    long countByStatusIgnoreCase(
             String status
     );
 }
