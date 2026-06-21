@@ -175,6 +175,20 @@ public class PartidaService {
         return lancarResultado(partidaId, golsCasa, golsVisitante);
     }
 
+    // Salva o placar parcial e deixa a partida AO VIVO (EM_ANDAMENTO).
+    // NÃO recalcula palpites -> partidas ao vivo não geram pontos.
+    @Transactional
+    public Partida atualizarPlacarAoVivo(Long partidaId, Integer golsCasa, Integer golsVisitante) {
+        Partida partida = buscarPorId(partidaId);
+        validarGols(golsCasa, golsVisitante);
+
+        partida.setGolsCasa(golsCasa);
+        partida.setGolsVisitante(golsVisitante);
+        partida.setStatus("EM_ANDAMENTO");
+
+        return partidaRepository.save(partida);
+    }
+
     @Transactional
     public void excluir(Long id) {
         Partida partida = buscarPorId(id);
