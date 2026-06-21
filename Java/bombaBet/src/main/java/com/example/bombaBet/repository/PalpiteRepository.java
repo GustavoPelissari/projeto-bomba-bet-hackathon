@@ -32,4 +32,9 @@ public interface PalpiteRepository
     long countByUsuario(
             Usuario usuario
     );
+
+    // Remove todos os palpites de um usuário (usado ao excluir a conta).
+    void deleteByUsuario(
+            Usuario usuario
+    );
 }

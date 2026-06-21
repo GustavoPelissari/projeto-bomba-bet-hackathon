@@ -123,6 +123,7 @@ export default function MatchDetailScreen() {
   // Atalhos para os estados da partida.
   const isScheduled = match.status === 'SCHEDULED'; // ainda dá p/ palpitar
   const isFinished = match.status === 'FINISHED';   // já terminou
+  const showScore = !isScheduled;                   // mostra placar ao vivo e encerrada
 
   return (
     <ScreenContainer noPadding>
@@ -159,17 +160,17 @@ export default function MatchDetailScreen() {
         </View>
 
         {/* Confronto */}
-        {/* Mandante x Visitante em tamanho grande (placar real só se encerrada) */}
+        {/* Mandante x Visitante em tamanho grande (placar aparece ao vivo e encerrada) */}
         <View style={styles.confronto}>
           <TeamRow
             team={match.homeTeam}
-            score={isFinished ? match.homeScore : undefined}
+            score={showScore ? match.homeScore : undefined}
             large
           />
           <Text style={styles.versus}>x</Text>
           <TeamRow
             team={match.awayTeam}
-            score={isFinished ? match.awayScore : undefined}
+            score={showScore ? match.awayScore : undefined}
             large
           />
         </View>

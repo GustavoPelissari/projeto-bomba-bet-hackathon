@@ -6,6 +6,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class AuthViewController {
 
+    // Raiz do site -> manda para a tela de login.
+    @GetMapping("/")
+    public String raiz() {
+        return "redirect:/login";
+    }
+
     // Apenas exibe a página de login.
     // O POST /login é processado pelo Spring Security (ver SecurityConfig:
     // formLogin -> loginProcessingUrl("/login")).

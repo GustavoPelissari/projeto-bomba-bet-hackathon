@@ -25,19 +25,12 @@ import java.util.Set;
 public class PartidaService {
 
     private static final Set<String> FASES_PERMITIDAS = Set.of(
-            "GRUPOS",
-            "DEZESSEIS_AVOS_DE_FINAL",
-            "OITAVAS_DE_FINAL",
-            "QUARTAS_DE_FINAL",
-            "SEMIFINAL",
-            "DISPUTA_TERCEIRO_LUGAR",
-            "FINAL"
+            "GRUPOS", "DEZESSEIS_AVOS_DE_FINAL", "OITAVAS_DE_FINAL",
+            "QUARTAS_DE_FINAL", "SEMIFINAL", "DISPUTA_TERCEIRO_LUGAR", "FINAL"
     );
 
     private static final Set<String> STATUS_PERMITIDOS = Set.of(
-            "AGENDADA",
-            "EM_ANDAMENTO",
-            "ENCERRADA"
+            "AGENDADA", "EM_ANDAMENTO", "ENCERRADA"
     );
 
     private final PartidaRepository partidaRepository;
@@ -45,131 +38,66 @@ public class PartidaService {
     private final UsuarioRepository usuarioRepository;
     private final SelecaoService selecaoService;
 
+    // ---------------- Consultas ----------------
+
     public List<Partida> listarTodas() {
-        return partidaRepository.findAll(
-                Sort.by(
-                        Sort.Direction.ASC,
-                        "dataHora"
-                )
-        );
+        return partidaRepository.findAll(Sort.by(Sort.Direction.ASC, "dataHora"));
     }
 
     public Partida buscarPorId(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException(
-                    "O ID da partida é obrigatório"
-            );
+            throw new IllegalArgumentException("O ID da partida é obrigatório");
         }
-
-        return partidaRepository.findById(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Partida não encontrada com o ID: " + id
-                        )
-                );
+        return partidaRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Partida não encontrada com o ID: " + id));
     }
 
     public List<Partida> listarProximasPartidas() {
-        return partidaRepository
-                .findByDataHoraAfterOrderByDataHoraAsc(
-                        LocalDateTime.now()
-                );
+        return partidaRepository.findByDataHoraAfterOrderByDataHoraAsc(LocalDateTime.now());
     }
 
     public List<Partida> listarProximasDezPartidas() {
-        return partidaRepository
-                .findTop10ByDataHoraAfterAndStatusIgnoreCaseOrderByDataHoraAsc(
-                        LocalDateTime.now(),
-                        "AGENDADA"
-                );
+        return partidaRepository.findTop10ByDataHoraAfterAndStatusIgnoreCaseOrderByDataHoraAsc(
+                LocalDateTime.now(), "AGENDADA");
     }
 
     public List<Partida> listarPorFase(String fase) {
-        String faseNormalizada = normalizarFase(fase);
-
-        return partidaRepository
-                .findByFaseIgnoreCaseOrderByDataHoraAsc(
-                        faseNormalizada
-                );
+        return partidaRepository.findByFaseIgnoreCaseOrderByDataHoraAsc(normalizarFase(fase));
     }
 
     public List<Partida> listarPorStatus(String status) {
-        String statusNormalizado = normalizarStatus(status);
-
-        return partidaRepository
-                .findByStatusIgnoreCaseOrderByDataHoraAsc(
-                        statusNormalizado
-                );
+        return partidaRepository.findByStatusIgnoreCaseOrderByDataHoraAsc(normalizarStatus(status));
     }
 
-    public List<Partida> listarPorFaseEStatus(
-            String fase,
-            String status
-    ) {
-        String faseNormalizada = normalizarFase(fase);
-        String statusNormalizado = normalizarStatus(status);
-
-        return partidaRepository
-                .findByFaseIgnoreCaseAndStatusIgnoreCaseOrderByDataHoraAsc(
-                        faseNormalizada,
-                        statusNormalizado
-                );
+    public List<Partida> listarPorFaseEStatus(String fase, String status) {
+        return partidaRepository.findByFaseIgnoreCaseAndStatusIgnoreCaseOrderByDataHoraAsc(
+                normalizarFase(fase), normalizarStatus(status));
     }
 
     public List<Partida> listarPorData(LocalDate data) {
         if (data == null) {
-            throw new IllegalArgumentException(
-                    "A data é obrigatória"
-            );
+            throw new IllegalArgumentException("A data é obrigatória");
         }
-
-        LocalDateTime inicio = data.atStartOfDay();
-        LocalDateTime fim = data.plusDays(1).atStartOfDay();
-
-        return partidaRepository
-                .findByDataHoraBetweenOrderByDataHoraAsc(
-                        inicio,
-                        fim
-                );
+        return partidaRepository.findByDataHoraBetweenOrderByDataHoraAsc(
+                data.atStartOfDay(), data.plusDays(1).atStartOfDay());
     }
 
     public long contarPartidasPendentesDeResultado() {
-        return partidaRepository.countByStatusIgnoreCase(
-                "AGENDADA"
-        );
+        return partidaRepository.countByStatusIgnoreCase("AGENDADA");
     }
+
+    // ---------------- Cadastro / edição ----------------
 
     @Transactional
     public Partida cadastrar(Partida partida) {
         validarPartida(partida, true);
+        aplicarSelecoes(partida, partida);
 
-        Selecao selecaoCasa = buscarSelecao(
-                partida.getSelecaoCasa(),
-                "A seleção da casa é obrigatória"
-        );
-
-        Selecao selecaoVisitante = buscarSelecao(
-                partida.getSelecaoVisitante(),
-                "A seleção visitante é obrigatória"
-        );
-
-        validarSelecoesDiferentes(
-                selecaoCasa,
-                selecaoVisitante
-        );
-
+        String fase = normalizarFase(partida.getFase());
         partida.setId(null);
-        partida.setSelecaoCasa(selecaoCasa);
-        partida.setSelecaoVisitante(selecaoVisitante);
         partida.setEstadio(partida.getEstadio().trim());
-        partida.setFase(normalizarFase(partida.getFase()));
-        partida.setGrupo(
-                normalizarGrupo(
-                        partida.getGrupo(),
-                        partida.getFase()
-                )
-        );
-
+        partida.setFase(fase);
+        partida.setGrupo(normalizarGrupo(partida.getGrupo(), fase));
         partida.setStatus("AGENDADA");
         partida.setGolsCasa(null);
         partida.setGolsVisitante(null);
@@ -178,434 +106,239 @@ public class PartidaService {
     }
 
     @Transactional
-    public Partida atualizar(
-            Long id,
-            Partida dadosAtualizados
-    ) {
-        Partida partidaSalva = buscarPorId(id);
-
-        if ("ENCERRADA".equalsIgnoreCase(
-                partidaSalva.getStatus()
-        )) {
+    public Partida atualizar(Long id, Partida dados) {
+        Partida partida = buscarPorId(id);
+        if ("ENCERRADA".equalsIgnoreCase(partida.getStatus())) {
             throw new IllegalStateException(
-                    "Uma partida encerrada não pode ser alterada por este método"
-            );
+                    "Uma partida encerrada não pode ser alterada por este método");
         }
 
-        validarPartida(dadosAtualizados, false);
+        validarPartida(dados, false);
+        aplicarSelecoes(partida, dados);
 
-        Selecao selecaoCasa = buscarSelecao(
-                dadosAtualizados.getSelecaoCasa(),
-                "A seleção da casa é obrigatória"
-        );
+        String fase = normalizarFase(dados.getFase());
+        partida.setDataHora(dados.getDataHora());
+        partida.setEstadio(dados.getEstadio().trim());
+        partida.setFase(fase);
+        partida.setGrupo(normalizarGrupo(dados.getGrupo(), fase));
 
-        Selecao selecaoVisitante = buscarSelecao(
-                dadosAtualizados.getSelecaoVisitante(),
-                "A seleção visitante é obrigatória"
-        );
-
-        validarSelecoesDiferentes(
-                selecaoCasa,
-                selecaoVisitante
-        );
-
-        String faseNormalizada =
-                normalizarFase(dadosAtualizados.getFase());
-
-        partidaSalva.setSelecaoCasa(selecaoCasa);
-        partidaSalva.setSelecaoVisitante(selecaoVisitante);
-        partidaSalva.setDataHora(
-                dadosAtualizados.getDataHora()
-        );
-        partidaSalva.setEstadio(
-                dadosAtualizados.getEstadio().trim()
-        );
-        partidaSalva.setFase(faseNormalizada);
-        partidaSalva.setGrupo(
-                normalizarGrupo(
-                        dadosAtualizados.getGrupo(),
-                        faseNormalizada
-                )
-        );
-
-        return partidaRepository.save(partidaSalva);
+        return partidaRepository.save(partida);
     }
 
     @Transactional
-    public Partida alterarStatus(
-            Long id,
-            String novoStatus
-    ) {
+    public Partida alterarStatus(Long id, String novoStatus) {
         Partida partida = buscarPorId(id);
+        String status = normalizarStatus(novoStatus);
 
-        String statusNormalizado =
-                normalizarStatus(novoStatus);
-
-        if ("ENCERRADA".equals(statusNormalizado)
-                && (partida.getGolsCasa() == null
-                || partida.getGolsVisitante() == null)) {
-
+        if ("ENCERRADA".equals(status)
+                && (partida.getGolsCasa() == null || partida.getGolsVisitante() == null)) {
             throw new IllegalStateException(
-                    "Não é possível encerrar uma partida sem informar o resultado"
-            );
+                    "Não é possível encerrar uma partida sem informar o resultado");
         }
 
-        partida.setStatus(statusNormalizado);
-
+        partida.setStatus(status);
         return partidaRepository.save(partida);
     }
 
     @Transactional
     public Partida iniciarPartida(Long id) {
         Partida partida = buscarPorId(id);
-
-        if ("ENCERRADA".equalsIgnoreCase(
-                partida.getStatus()
-        )) {
+        if ("ENCERRADA".equalsIgnoreCase(partida.getStatus())) {
             throw new IllegalStateException(
-                    "Uma partida encerrada não pode ser iniciada novamente"
-            );
+                    "Uma partida encerrada não pode ser iniciada novamente");
         }
-
         partida.setStatus("EM_ANDAMENTO");
-
         return partidaRepository.save(partida);
     }
 
     @Transactional
-    public Partida lancarResultado(
-            Long partidaId,
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
+    public Partida lancarResultado(Long partidaId, Integer golsCasa, Integer golsVisitante) {
         Partida partida = buscarPorId(partidaId);
-
         validarGols(golsCasa, golsVisitante);
 
         partida.setGolsCasa(golsCasa);
         partida.setGolsVisitante(golsVisitante);
         partida.setStatus("ENCERRADA");
 
-        Partida partidaSalva =
-                partidaRepository.save(partida);
-
-        recalcularPalpitesDaPartida(partidaSalva);
-
-        return partidaSalva;
+        Partida salva = partidaRepository.save(partida);
+        recalcularPalpitesDaPartida(salva);
+        return salva;
     }
 
     @Transactional
-    public Partida corrigirResultado(
-            Long partidaId,
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
+    public Partida corrigirResultado(Long partidaId, Integer golsCasa, Integer golsVisitante) {
         Partida partida = buscarPorId(partidaId);
-
-        if (!"ENCERRADA".equalsIgnoreCase(
-                partida.getStatus()
-        )) {
+        if (!"ENCERRADA".equalsIgnoreCase(partida.getStatus())) {
             throw new IllegalStateException(
-                    "A partida ainda não possui um resultado encerrado para ser corrigido"
-            );
+                    "A partida ainda não possui um resultado encerrado para ser corrigido");
         }
+        return lancarResultado(partidaId, golsCasa, golsVisitante);
+    }
 
-        return lancarResultado(
-                partidaId,
-                golsCasa,
-                golsVisitante
-        );
+    // Salva o placar parcial e deixa a partida AO VIVO (EM_ANDAMENTO).
+    // NÃO recalcula palpites -> partidas ao vivo não geram pontos.
+    @Transactional
+    public Partida atualizarPlacarAoVivo(Long partidaId, Integer golsCasa, Integer golsVisitante) {
+        Partida partida = buscarPorId(partidaId);
+        validarGols(golsCasa, golsVisitante);
+
+        partida.setGolsCasa(golsCasa);
+        partida.setGolsVisitante(golsVisitante);
+        partida.setStatus("EM_ANDAMENTO");
+
+        return partidaRepository.save(partida);
     }
 
     @Transactional
     public void excluir(Long id) {
         Partida partida = buscarPorId(id);
-
-        List<Palpite> palpites =
-                palpiteRepository.findByPartida(partida);
-
-        if (!palpites.isEmpty()) {
+        if (!palpiteRepository.findByPartida(partida).isEmpty()) {
             throw new IllegalStateException(
-                    "Não é possível excluir uma partida que possui palpites cadastrados"
-            );
+                    "Não é possível excluir uma partida que possui palpites cadastrados");
         }
-
         partidaRepository.delete(partida);
     }
 
-    private void recalcularPalpitesDaPartida(
-            Partida partida
-    ) {
-        List<Palpite> palpites =
-                palpiteRepository.findByPartida(partida);
+    // ---------------- Pontuação ----------------
 
-        List<Usuario> usuariosAfetados =
-                new ArrayList<>();
+    // Recalcula a pontuação de todos os palpites da partida e ajusta o total
+    // (pontos e placares exatos) de cada usuário afetado, numa única transação.
+    private void recalcularPalpitesDaPartida(Partida partida) {
+        List<Palpite> palpites = palpiteRepository.findByPartida(partida);
+        List<Usuario> afetados = new ArrayList<>();
 
         for (Palpite palpite : palpites) {
-            int pontuacaoAnterior =
-                    palpite.getPontuacao() == null
-                            ? 0
-                            : palpite.getPontuacao();
+            int pontuacaoAnterior = valorOuZero(palpite.getPontuacao());
+            boolean eraPlacarExato = "PLACAR_EXATO".equalsIgnoreCase(palpite.getCriterioPontuacao());
 
-            boolean eraPlacarExato =
-                    "PLACAR_EXATO".equalsIgnoreCase(
-                            palpite.getCriterioPontuacao()
-                    );
-
-            ResultadoPontuacao novoResultado =
-                    calcularPontuacao(
-                            palpite,
-                            partida
-                    );
-
+            ResultadoPontuacao novo = calcularPontuacao(palpite, partida);
             Usuario usuario = palpite.getUsuario();
 
-            int novaPontuacaoTotal =
-                    valorOuZero(usuario.getPontuacaoTotal())
-                            - pontuacaoAnterior
-                            + novoResultado.pontos();
+            int totalPontos = valorOuZero(usuario.getPontuacaoTotal())
+                    - pontuacaoAnterior + novo.pontos();
+            int totalExatos = valorOuZero(usuario.getPlacaresExatos())
+                    - (eraPlacarExato ? 1 : 0)
+                    + ("PLACAR_EXATO".equals(novo.criterio()) ? 1 : 0);
 
-            int novosPlacaresExatos =
-                    valorOuZero(usuario.getPlacaresExatos());
-
-            if (eraPlacarExato) {
-                novosPlacaresExatos--;
-            }
-
-            if ("PLACAR_EXATO".equals(
-                    novoResultado.criterio()
-            )) {
-                novosPlacaresExatos++;
-            }
-
-            usuario.setPontuacaoTotal(
-                    Math.max(0, novaPontuacaoTotal)
-            );
-
-            usuario.setPlacaresExatos(
-                    Math.max(0, novosPlacaresExatos)
-            );
-
-            palpite.setPontuacao(
-                    novoResultado.pontos()
-            );
-
-            palpite.setCriterioPontuacao(
-                    novoResultado.criterio()
-            );
-
-            usuariosAfetados.add(usuario);
+            usuario.setPontuacaoTotal(Math.max(0, totalPontos));
+            usuario.setPlacaresExatos(Math.max(0, totalExatos));
+            palpite.setPontuacao(novo.pontos());
+            palpite.setCriterioPontuacao(novo.criterio());
+            afetados.add(usuario);
         }
 
         palpiteRepository.saveAll(palpites);
-        usuarioRepository.saveAll(usuariosAfetados);
+        usuarioRepository.saveAll(afetados);
     }
 
-    private ResultadoPontuacao calcularPontuacao(
-            Palpite palpite,
-            Partida partida
-    ) {
-        boolean placarExato =
-                palpite.getGolsCasa()
-                        .equals(partida.getGolsCasa())
-                        && palpite.getGolsVisitante()
-                        .equals(partida.getGolsVisitante());
-
+    // Regra: placar exato = 10; acerto do vencedor/empate = 5; erro = 0.
+    private ResultadoPontuacao calcularPontuacao(Palpite palpite, Partida partida) {
+        boolean placarExato = palpite.getGolsCasa().equals(partida.getGolsCasa())
+                && palpite.getGolsVisitante().equals(partida.getGolsVisitante());
         if (placarExato) {
-            return new ResultadoPontuacao(
-                    10,
-                    "PLACAR_EXATO"
-            );
+            return new ResultadoPontuacao(10, "PLACAR_EXATO");
         }
 
-        int resultadoPalpite = Integer.compare(
-                palpite.getGolsCasa(),
-                palpite.getGolsVisitante()
-        );
-
-        int resultadoPartida = Integer.compare(
-                partida.getGolsCasa(),
-                partida.getGolsVisitante()
-        );
-
-        if (resultadoPalpite == resultadoPartida) {
-            return new ResultadoPontuacao(
-                    5,
-                    "VENCEDOR_OU_EMPATE"
-            );
+        int sinalPalpite = Integer.compare(palpite.getGolsCasa(), palpite.getGolsVisitante());
+        int sinalPartida = Integer.compare(partida.getGolsCasa(), partida.getGolsVisitante());
+        if (sinalPalpite == sinalPartida) {
+            return new ResultadoPontuacao(5, "VENCEDOR_OU_EMPATE");
         }
-
-        return new ResultadoPontuacao(
-                0,
-                "ERRO_TOTAL"
-        );
+        return new ResultadoPontuacao(0, "ERRO_TOTAL");
     }
 
-    private void validarPartida(
-            Partida partida,
-            boolean cadastro
-    ) {
+    // ---------------- Validações / normalizações ----------------
+
+    // Resolve as seleções (por id) na partida "alvo" a partir dos dados em "fonte".
+    private void aplicarSelecoes(Partida alvo, Partida fonte) {
+        Selecao casa = buscarSelecao(fonte.getSelecaoCasa(), "A seleção da casa é obrigatória");
+        Selecao visitante = buscarSelecao(fonte.getSelecaoVisitante(), "A seleção visitante é obrigatória");
+        if (casa.getId().equals(visitante.getId())) {
+            throw new IllegalArgumentException(
+                    "A seleção da casa não pode ser igual à seleção visitante");
+        }
+        alvo.setSelecaoCasa(casa);
+        alvo.setSelecaoVisitante(visitante);
+    }
+
+    private void validarPartida(Partida partida, boolean cadastro) {
         if (partida == null) {
-            throw new IllegalArgumentException(
-                    "Os dados da partida são obrigatórios"
-            );
+            throw new IllegalArgumentException("Os dados da partida são obrigatórios");
         }
-
         if (partida.getDataHora() == null) {
-            throw new IllegalArgumentException(
-                    "A data e a hora da partida são obrigatórias"
-            );
+            throw new IllegalArgumentException("A data e a hora da partida são obrigatórias");
         }
-
-        if (cadastro
-                && !partida.getDataHora()
-                .isAfter(LocalDateTime.now())) {
-
-            throw new IllegalArgumentException(
-                    "A partida deve ser cadastrada com uma data futura"
-            );
+        if (cadastro && !partida.getDataHora().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("A partida deve ser cadastrada com uma data futura");
         }
-
-        if (partida.getEstadio() == null
-                || partida.getEstadio().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "O estádio é obrigatório"
-            );
+        if (partida.getEstadio() == null || partida.getEstadio().isBlank()) {
+            throw new IllegalArgumentException("O estádio é obrigatório");
         }
-
         if (partida.getEstadio().trim().length() > 150) {
-            throw new IllegalArgumentException(
-                    "O estádio não pode ultrapassar 150 caracteres"
-            );
+            throw new IllegalArgumentException("O estádio não pode ultrapassar 150 caracteres");
         }
-
         normalizarFase(partida.getFase());
     }
 
-    private Selecao buscarSelecao(
-            Selecao selecao,
-            String mensagem
-    ) {
+    private Selecao buscarSelecao(Selecao selecao, String mensagem) {
         if (selecao == null || selecao.getId() == null) {
             throw new IllegalArgumentException(mensagem);
         }
-
-        return selecaoService.buscarPorId(
-                selecao.getId()
-        );
+        return selecaoService.buscarPorId(selecao.getId());
     }
 
-    private void validarSelecoesDiferentes(
-            Selecao selecaoCasa,
-            Selecao selecaoVisitante
-    ) {
-        if (selecaoCasa.getId().equals(
-                selecaoVisitante.getId()
-        )) {
-            throw new IllegalArgumentException(
-                    "A seleção da casa não pode ser igual à seleção visitante"
-            );
-        }
-    }
-
-    private void validarGols(
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
+    private void validarGols(Integer golsCasa, Integer golsVisitante) {
         if (golsCasa == null || golsVisitante == null) {
-            throw new IllegalArgumentException(
-                    "Os gols das duas seleções são obrigatórios"
-            );
+            throw new IllegalArgumentException("Os gols das duas seleções são obrigatórios");
         }
-
         if (golsCasa < 0 || golsVisitante < 0) {
-            throw new IllegalArgumentException(
-                    "A quantidade de gols não pode ser negativa"
-            );
+            throw new IllegalArgumentException("A quantidade de gols não pode ser negativa");
         }
     }
 
     private String normalizarFase(String fase) {
-        if (fase == null || fase.isBlank()) {
-            throw new IllegalArgumentException(
-                    "A fase da partida é obrigatória"
-            );
+        String valor = normalizarToken(fase, "A fase da partida é obrigatória");
+        if (!FASES_PERMITIDAS.contains(valor)) {
+            throw new IllegalArgumentException("Fase da partida inválida");
         }
-
-        String faseNormalizada = fase
-                .trim()
-                .toUpperCase()
-                .replace(" ", "_");
-
-        if (!FASES_PERMITIDAS.contains(
-                faseNormalizada
-        )) {
-            throw new IllegalArgumentException(
-                    "Fase da partida inválida"
-            );
-        }
-
-        return faseNormalizada;
+        return valor;
     }
 
     private String normalizarStatus(String status) {
-        if (status == null || status.isBlank()) {
-            throw new IllegalArgumentException(
-                    "O status da partida é obrigatório"
-            );
+        String valor = normalizarToken(status, "O status da partida é obrigatório");
+        if (!STATUS_PERMITIDOS.contains(valor)) {
+            throw new IllegalArgumentException("Status da partida inválido");
         }
-
-        String statusNormalizado = status
-                .trim()
-                .toUpperCase()
-                .replace(" ", "_");
-
-        if (!STATUS_PERMITIDOS.contains(
-                statusNormalizado
-        )) {
-            throw new IllegalArgumentException(
-                    "Status da partida inválido"
-            );
-        }
-
-        return statusNormalizado;
+        return valor;
     }
 
-    private String normalizarGrupo(
-            String grupo,
-            String fase
-    ) {
-        if (!"GRUPOS".equalsIgnoreCase(fase)) {
-            return null;
+    // Tira espaços, deixa em maiúsculas e troca espaços por "_".
+    private String normalizarToken(String valor, String mensagemObrigatorio) {
+        if (valor == null || valor.isBlank()) {
+            throw new IllegalArgumentException(mensagemObrigatorio);
         }
+        return valor.trim().toUpperCase().replace(" ", "_");
+    }
 
+    private String normalizarGrupo(String grupo, String fase) {
+        if (!"GRUPOS".equalsIgnoreCase(fase)) {
+            return null; // grupo só faz sentido na fase de grupos
+        }
         if (grupo == null || grupo.isBlank()) {
             throw new IllegalArgumentException(
-                    "O grupo é obrigatório para partidas da fase de grupos"
-            );
+                    "O grupo é obrigatório para partidas da fase de grupos");
         }
-
-        String grupoNormalizado =
-                grupo.trim().toUpperCase();
-
-        if (!grupoNormalizado.matches("[A-L]")) {
-            throw new IllegalArgumentException(
-                    "O grupo deve ser uma letra entre A e L"
-            );
+        String valor = grupo.trim().toUpperCase();
+        if (!valor.matches("[A-L]")) {
+            throw new IllegalArgumentException("O grupo deve ser uma letra entre A e L");
         }
-
-        return grupoNormalizado;
+        return valor;
     }
 
     private int valorOuZero(Integer valor) {
         return valor == null ? 0 : valor;
     }
 
-    private record ResultadoPontuacao(
-            int pontos,
-            String criterio
-    ) {
+    private record ResultadoPontuacao(int pontos, String criterio) {
     }
 }

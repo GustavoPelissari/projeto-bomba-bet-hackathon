@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'; // React + hooks
+import React, { useCallback, useMemo, useRef, useState } from 'react'; // React + hooks
 import {
+  RefreshControl,    // "puxar para atualizar"
   ScrollView,        // rolagem (usada nos filtros horizontais)
   SectionList,       // lista dividida em seções (por fase)
   StyleSheet,
@@ -7,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';                  // navegação imperativa
+import { router, useFocusEffect } from 'expo-router';  // navegação + efeito ao focar a aba
 import { theme } from '../../constants/theme';         // tokens de design
 import { listMatches } from '../../services/matchService'; // busca partidas
 import { phaseLabel } from '../../utils/format';       // traduz a fase p/ português
@@ -28,6 +29,7 @@ const PHASE_CHIPS: { key: PhaseFilter; label: string }[] = [
   { key: 'ROUND_16', label: 'Oitavas' },
   { key: 'QUARTER', label: 'Quartas' },
   { key: 'SEMI', label: 'Semi' },
+  { key: 'THIRD', label: '3º lugar' },
   { key: 'FINAL', label: 'Final' },
 ];
 
@@ -40,7 +42,7 @@ const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
 ];
 
 // Ordem em que as seções (fases) aparecem na lista.
-const PHASE_ORDER: Phase[] = ['GROUP', 'ROUND_32', 'ROUND_16', 'QUARTER', 'SEMI', 'FINAL'];
+const PHASE_ORDER: Phase[] = ['GROUP', 'ROUND_32', 'ROUND_16', 'QUARTER', 'SEMI', 'THIRD', 'FINAL'];
 
 // Componente de um "chip" (botão de filtro arredondado).
 function Chip({
@@ -77,24 +79,44 @@ export default function MatchesScreen() {
   const [phase, setPhase] = useState<PhaseFilter>('ALL');      // filtro de fase atual
   const [status, setStatus] = useState<StatusFilter>('ALL');   // filtro de situação atual
   const [date, setDate] = useState<string>('ALL');            // filtro de data (yyyy-mm-dd) ou 'ALL'
+  const [refreshing, setRefreshing] = useState(false);        // "puxar para atualizar" em andamento?
+  const jaCarregou = useRef(false);                           // já houve a 1ª carga?
 
-  // Carrega as partidas do serviço.
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setMatches(await listMatches());
-    } catch {
-      setError('Não foi possível carregar as partidas. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Busca as partidas. "modo" controla o indicador exibido:
+  //  - 'inicial'   : spinner de tela cheia (primeira carga)
+  //  - 'refresh'   : indicador do "puxar para atualizar"
+  //  - 'silencioso': atualiza em segundo plano (foco/auto-refresh), sem indicador
+  const carregar = useCallback(
+    async (modo: 'inicial' | 'refresh' | 'silencioso' = 'inicial') => {
+      if (modo === 'inicial') setLoading(true);
+      if (modo === 'refresh') setRefreshing(true);
+      if (modo !== 'silencioso') setError(null);
+      try {
+        setMatches(await listMatches());
+      } catch {
+        // Em segundo plano mantém os dados atuais e não mostra erro.
+        if (modo === 'inicial') {
+          setError('Não foi possível carregar as partidas. Tente novamente.');
+        }
+      } finally {
+        if (modo === 'inicial') setLoading(false);
+        if (modo === 'refresh') setRefreshing(false);
+      }
+    },
+    []
+  );
 
-  // Roda "load" ao montar a tela.
-  useEffect(() => {
-    load();
-  }, [load]);
+  // Recarrega ao abrir a aba e a cada 20s — assim mudanças feitas no painel
+  // admin (ex.: partida que entrou "ao vivo") aparecem sem reiniciar o app.
+  // O timer é encerrado ao sair da aba.
+  useFocusEffect(
+    useCallback(() => {
+      carregar(jaCarregou.current ? 'silencioso' : 'inicial');
+      jaCarregou.current = true;
+      const timer = setInterval(() => carregar('silencioso'), 20000);
+      return () => clearInterval(timer);
+    }, [carregar])
+  );
 
   // Datas disponíveis (extraídas das partidas) para o filtro por data.
   // Cada partida vira o dia "yyyy-mm-dd"; mantemos os dias únicos, ordenados.
@@ -191,7 +213,7 @@ export default function MatchesScreen() {
     return (
       <ScreenContainer>
         {Filters}
-        <StateView loading={loading} error={error} onRetry={load} />
+        <StateView loading={loading} error={error} onRetry={() => carregar('inicial')} />
       </ScreenContainer>
     );
   }
@@ -204,6 +226,14 @@ export default function MatchesScreen() {
         sections={sections}
         keyExtractor={(item) => String(item.id)} // chave única de cada partida
         contentContainerStyle={styles.list}
+        refreshControl={                          // puxar para baixo = atualizar
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => carregar('refresh')}
+            tintColor={theme.colors.accent}
+            colors={[theme.colors.accent]}
+          />
+        }
         stickySectionHeadersEnabled={false}       // cabeçalhos não "grudam" no topo ao rolar
         renderSectionHeader={({ section }) => (    // como desenhar o título de cada seção
           <Text style={styles.sectionTitle} accessibilityRole="header">

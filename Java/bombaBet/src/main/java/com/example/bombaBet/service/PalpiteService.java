@@ -23,81 +23,58 @@ public class PalpiteService {
     private final UsuarioService usuarioService;
     private final PartidaService partidaService;
 
+    // ---------------- Consultas ----------------
+
     public List<Palpite> listarTodos() {
         return palpiteRepository.findAll();
     }
 
     public Palpite buscarPorId(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException(
-                    "O ID do palpite é obrigatório"
-            );
+            throw new IllegalArgumentException("O ID do palpite é obrigatório");
         }
-
-        return palpiteRepository.findById(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Palpite não encontrado com o ID: " + id
-                        )
-                );
+        return palpiteRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Palpite não encontrado com o ID: " + id));
     }
 
     public List<Palpite> listarPorUsuario(Long usuarioId) {
-        Usuario usuario = usuarioService.buscarPorId(usuarioId);
-
-        return palpiteRepository
-                .findByUsuarioOrderByPartidaDataHoraAsc(usuario);
+        return palpiteRepository.findByUsuarioOrderByPartidaDataHoraAsc(
+                usuarioService.buscarPorId(usuarioId));
     }
 
     public List<Palpite> listarPorEmailUsuario(String email) {
-        Usuario usuario = usuarioService.buscarPorEmail(email);
-
-        return palpiteRepository
-                .findByUsuarioOrderByPartidaDataHoraAsc(usuario);
+        return palpiteRepository.findByUsuarioOrderByPartidaDataHoraAsc(
+                usuarioService.buscarPorEmail(email));
     }
 
     public List<Palpite> listarPorPartida(Long partidaId) {
-        Partida partida = partidaService.buscarPorId(partidaId);
-
-        return palpiteRepository.findByPartida(partida);
+        return palpiteRepository.findByPartida(partidaService.buscarPorId(partidaId));
     }
 
-    public Palpite buscarPorUsuarioEPartida(
-            Long usuarioId,
-            Long partidaId
-    ) {
+    public Palpite buscarPorUsuarioEPartida(Long usuarioId, Long partidaId) {
         Usuario usuario = usuarioService.buscarPorId(usuarioId);
         Partida partida = partidaService.buscarPorId(partidaId);
-
-        return palpiteRepository
-                .findByUsuarioAndPartida(usuario, partida)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "O usuário ainda não possui um palpite para esta partida"
-                        )
-                );
+        return palpiteRepository.findByUsuarioAndPartida(usuario, partida).orElseThrow(() ->
+                new EntityNotFoundException("O usuário ainda não possui um palpite para esta partida"));
     }
 
-    public boolean usuarioJaPalpitou(
-            Long usuarioId,
-            Long partidaId
-    ) {
-        Usuario usuario = usuarioService.buscarPorId(usuarioId);
-        Partida partida = partidaService.buscarPorId(partidaId);
-
+    public boolean usuarioJaPalpitou(Long usuarioId, Long partidaId) {
         return palpiteRepository.existsByUsuarioAndPartida(
-                usuario,
-                partida
-        );
+                usuarioService.buscarPorId(usuarioId), partidaService.buscarPorId(partidaId));
     }
+
+    public long contarTodos() {
+        return palpiteRepository.count();
+    }
+
+    public long contarPorUsuario(Long usuarioId) {
+        return palpiteRepository.countByUsuario(usuarioService.buscarPorId(usuarioId));
+    }
+
+    // ---------------- Registrar / editar / excluir ----------------
 
     @Transactional
-    public Palpite registrar(
-            Long usuarioId,
-            Long partidaId,
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
+    public Palpite registrar(Long usuarioId, Long partidaId, Integer golsCasa, Integer golsVisitante) {
         Usuario usuario = usuarioService.buscarPorId(usuarioId);
         Partida partida = partidaService.buscarPorId(partidaId);
 
@@ -105,13 +82,8 @@ public class PalpiteService {
         validarGols(golsCasa, golsVisitante);
         validarPartidaAbertaParaPalpite(partida);
 
-        if (palpiteRepository.existsByUsuarioAndPartida(
-                usuario,
-                partida
-        )) {
-            throw new IllegalStateException(
-                    "O usuário já possui um palpite para esta partida"
-            );
+        if (palpiteRepository.existsByUsuarioAndPartida(usuario, partida)) {
+            throw new IllegalStateException("O usuário já possui um palpite para esta partida");
         }
 
         Palpite palpite = Palpite.builder()
@@ -125,57 +97,31 @@ public class PalpiteService {
 
         try {
             return palpiteRepository.saveAndFlush(palpite);
-
         } catch (DataIntegrityViolationException exception) {
             throw new IllegalStateException(
                     "Não foi possível registrar o palpite. "
-                            + "O usuário pode já possuir um palpite para esta partida",
-                    exception
-            );
+                            + "O usuário pode já possuir um palpite para esta partida", exception);
         }
     }
 
     @Transactional
-    public Palpite registrarPorEmail(
-            String email,
-            Long partidaId,
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
-        Usuario usuario = usuarioService.buscarPorEmail(email);
-
-        return registrar(
-                usuario.getId(),
-                partidaId,
-                golsCasa,
-                golsVisitante
-        );
+    public Palpite registrarPorEmail(String email, Long partidaId, Integer golsCasa, Integer golsVisitante) {
+        return registrar(usuarioService.buscarPorEmail(email).getId(), partidaId, golsCasa, golsVisitante);
     }
 
     @Transactional
-    public Palpite editar(
-            Long palpiteId,
-            Long usuarioId,
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
+    public Palpite editar(Long palpiteId, Long usuarioId, Integer golsCasa, Integer golsVisitante) {
         Palpite palpite = buscarPorId(palpiteId);
         Usuario usuario = usuarioService.buscarPorId(usuarioId);
 
         validarProprietario(palpite, usuario);
         validarUsuario(usuario);
         validarGols(golsCasa, golsVisitante);
-        validarPartidaAbertaParaPalpite(
-                palpite.getPartida()
-        );
+        validarPartidaAbertaParaPalpite(palpite.getPartida());
 
         palpite.setGolsCasa(golsCasa);
         palpite.setGolsVisitante(golsVisitante);
-
-        /*
-         * Enquanto a partida não estiver encerrada,
-         * o palpite ainda não possui pontuação.
-         */
+        // Enquanto a partida não encerra, o palpite ainda não tem pontuação.
         palpite.setPontuacao(0);
         palpite.setCriterioPontuacao("PENDENTE");
 
@@ -183,157 +129,73 @@ public class PalpiteService {
     }
 
     @Transactional
-    public Palpite editarPorEmail(
-            Long palpiteId,
-            String email,
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
-        Usuario usuario = usuarioService.buscarPorEmail(email);
-
-        return editar(
-                palpiteId,
-                usuario.getId(),
-                golsCasa,
-                golsVisitante
-        );
+    public Palpite editarPorEmail(Long palpiteId, String email, Integer golsCasa, Integer golsVisitante) {
+        return editar(palpiteId, usuarioService.buscarPorEmail(email).getId(), golsCasa, golsVisitante);
     }
 
     @Transactional
-    public void excluir(
-            Long palpiteId,
-            Long usuarioId
-    ) {
+    public void excluir(Long palpiteId, Long usuarioId) {
         Palpite palpite = buscarPorId(palpiteId);
-        Usuario usuario = usuarioService.buscarPorId(usuarioId);
-
-        validarProprietario(palpite, usuario);
-        validarPartidaAbertaParaPalpite(
-                palpite.getPartida()
-        );
-
+        validarProprietario(palpite, usuarioService.buscarPorId(usuarioId));
+        validarPartidaAbertaParaPalpite(palpite.getPartida());
         palpiteRepository.delete(palpite);
     }
 
     @Transactional
-    public void excluirPorEmail(
-            Long palpiteId,
-            String email
-    ) {
-        Usuario usuario = usuarioService.buscarPorEmail(email);
-
-        excluir(
-                palpiteId,
-                usuario.getId()
-        );
+    public void excluirPorEmail(Long palpiteId, String email) {
+        excluir(palpiteId, usuarioService.buscarPorEmail(email).getId());
     }
 
-    public long contarTodos() {
-        return palpiteRepository.count();
-    }
-
-    public long contarPorUsuario(Long usuarioId) {
-        Usuario usuario = usuarioService.buscarPorId(usuarioId);
-
-        return palpiteRepository.countByUsuario(usuario);
-    }
+    // ---------------- Validações ----------------
 
     private void validarUsuario(Usuario usuario) {
         if (usuario == null) {
-            throw new IllegalArgumentException(
-                    "O usuário é obrigatório"
-            );
+            throw new IllegalArgumentException("O usuário é obrigatório");
         }
-
         if (!usuario.isEnabled()) {
-            throw new IllegalStateException(
-                    "O usuário está desativado e não pode registrar palpites"
-            );
+            throw new IllegalStateException("O usuário está desativado e não pode registrar palpites");
         }
-
         if (!usuario.isAccountNonLocked()) {
-            throw new IllegalStateException(
-                    "O usuário está bloqueado e não pode registrar palpites"
-            );
+            throw new IllegalStateException("O usuário está bloqueado e não pode registrar palpites");
         }
     }
 
-    private void validarGols(
-            Integer golsCasa,
-            Integer golsVisitante
-    ) {
+    private void validarGols(Integer golsCasa, Integer golsVisitante) {
         if (golsCasa == null || golsVisitante == null) {
-            throw new IllegalArgumentException(
-                    "Informe o placar das duas seleções"
-            );
+            throw new IllegalArgumentException("Informe o placar das duas seleções");
         }
-
         if (golsCasa < 0 || golsVisitante < 0) {
-            throw new IllegalArgumentException(
-                    "A quantidade de gols não pode ser negativa"
-            );
+            throw new IllegalArgumentException("A quantidade de gols não pode ser negativa");
         }
-
         if (golsCasa > 99 || golsVisitante > 99) {
-            throw new IllegalArgumentException(
-                    "A quantidade de gols informada é inválida"
-            );
+            throw new IllegalArgumentException("A quantidade de gols informada é inválida");
         }
     }
 
-    private void validarPartidaAbertaParaPalpite(
-            Partida partida
-    ) {
+    private void validarPartidaAbertaParaPalpite(Partida partida) {
         if (partida == null) {
-            throw new IllegalArgumentException(
-                    "A partida é obrigatória"
-            );
+            throw new IllegalArgumentException("A partida é obrigatória");
         }
-
         if (partida.getDataHora() == null) {
-            throw new IllegalStateException(
-                    "A partida não possui data e horário definidos"
-            );
+            throw new IllegalStateException("A partida não possui data e horário definidos");
         }
-
-        /*
-         * A regra exige que o horário atual seja
-         * estritamente anterior ao início da partida.
-         */
-        boolean partidaJaIniciou =
-                !LocalDateTime.now().isBefore(
-                        partida.getDataHora()
-                );
-
-        if (partidaJaIniciou) {
+        // O horário atual deve ser estritamente anterior ao início da partida.
+        if (!LocalDateTime.now().isBefore(partida.getDataHora())) {
             throw new IllegalStateException(
-                    "O prazo para registrar ou editar palpites desta partida foi encerrado"
-            );
+                    "O prazo para registrar ou editar palpites desta partida foi encerrado");
         }
-
-        if (!"AGENDADA".equalsIgnoreCase(
-                partida.getStatus()
-        )) {
-            throw new IllegalStateException(
-                    "Só é possível palpitar em partidas com status AGENDADA"
-            );
+        if (!"AGENDADA".equalsIgnoreCase(partida.getStatus())) {
+            throw new IllegalStateException("Só é possível palpitar em partidas com status AGENDADA");
         }
     }
 
-    private void validarProprietario(
-            Palpite palpite,
-            Usuario usuario
-    ) {
+    private void validarProprietario(Palpite palpite, Usuario usuario) {
         if (palpite.getUsuario() == null
                 || palpite.getUsuario().getId() == null
                 || usuario.getId() == null
-                || !palpite.getUsuario()
-                .getId()
-                .equals(usuario.getId())) {
-
+                || !palpite.getUsuario().getId().equals(usuario.getId())) {
             throw new AccessDeniedException(
-                    "O usuário não possui permissão para alterar este palpite"
-            );
+                    "O usuário não possui permissão para alterar este palpite");
         }
     }
 }

@@ -58,34 +58,44 @@ public class SelecaoViewController {
     @PostMapping("/{id}/editar")
     public String atualizar(
             @PathVariable Long id,
-            @ModelAttribute Selecao selecao
+            @ModelAttribute Selecao selecao,
+            Model model
     ) {
-
-        selecaoService.atualizar(
-                id,
-                selecao
-        );
-
-        return "redirect:/admin/selecoes";
+        try {
+            selecaoService.atualizar(id, selecao);
+            return "redirect:/admin/selecoes";
+        } catch (RuntimeException e) {
+            // Volta ao formulário (em modo edição) mostrando a mensagem.
+            selecao.setId(id);
+            model.addAttribute("erro", e.getMessage());
+            return "admin/selecoes/form";
+        }
     }
 
     @PostMapping("/{id}/excluir")
     public String excluir(
             @PathVariable Long id
     ) {
-
-        selecaoService.excluir(id);
-
+        try {
+            selecaoService.excluir(id);
+        } catch (RuntimeException e) {
+            // Não foi possível excluir (ex.: vinculada a partidas) — só volta à lista.
+        }
         return "redirect:/admin/selecoes";
     }
 
     @PostMapping
     public String salvar(
-            @ModelAttribute Selecao selecao
+            @ModelAttribute Selecao selecao,
+            Model model
     ) {
-
-        selecaoService.cadastrar(selecao);
-
-        return "redirect:/admin/selecoes";
+        try {
+            selecaoService.cadastrar(selecao);
+            return "redirect:/admin/selecoes";
+        } catch (RuntimeException e) {
+            // Volta ao formulário mostrando a mensagem (ex.: grupo inválido).
+            model.addAttribute("erro", e.getMessage());
+            return "admin/selecoes/form";
+        }
     }
 }
