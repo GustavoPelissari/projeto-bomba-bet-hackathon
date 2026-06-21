@@ -15,12 +15,22 @@
 
 <main class="container py-4">
 
-    <div class="mb-4">
-        <h1 class="fw-bold">Dashboard</h1>
-        <img src="src/main/resources/static/img/logo.png">
-        <p class="text-muted">
-            Acompanhe os principais indicadores do sistema.
-        </p>
+    <div class="d-flex align-items-center gap-3 mb-4">
+
+        <img th:src="@{/logo.png}"
+             alt="BombaBet"
+             style="width: 120px;">
+
+        <div>
+            <h1 class="fw-bold mb-1">
+                Dashboard
+            </h1>
+
+            <p class="text-muted mb-0">
+                Acompanhe os principais indicadores do sistema.
+            </p>
+        </div>
+
     </div>
 
     <div th:if="${mensagem}" class="alert alert-success" th:text="${mensagem}"></div>
