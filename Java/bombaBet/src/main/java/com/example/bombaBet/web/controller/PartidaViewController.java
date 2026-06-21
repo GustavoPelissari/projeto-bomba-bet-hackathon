@@ -101,16 +101,22 @@ public class PartidaViewController {
         return "admin/partidas/resultado";
     }
 
-    // Salva o resultado (lancarResultado define os gols, encerra a partida e recalcula os palpites).
+    // Salva o resultado. Se "encerrar" = true, encerra a partida e calcula os pontos;
+    // se false, mantém a partida AO VIVO (salva o placar parcial, sem gerar pontos).
     @PostMapping("/{id}/resultado")
     public String salvarResultado(
             @PathVariable Long id,
             @RequestParam Integer golsCasa,
             @RequestParam Integer golsVisitante,
+            @RequestParam(defaultValue = "true") boolean encerrar,
             Model model
     ) {
         try {
-            partidaService.lancarResultado(id, golsCasa, golsVisitante);
+            if (encerrar) {
+                partidaService.lancarResultado(id, golsCasa, golsVisitante);
+            } else {
+                partidaService.atualizarPlacarAoVivo(id, golsCasa, golsVisitante);
+            }
             return "redirect:/admin/partidas";
         } catch (RuntimeException e) {
             model.addAttribute("erro", e.getMessage());
