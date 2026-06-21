@@ -1,8 +1,4 @@
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\AuthApi.java
-C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\controller\PalpiteController.java
-C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\controller\PartidaController.java
-C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\controller\SelecaoController.java
-C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\controller\UsuarioController.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\palpite\PalpiteRequestDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\palpite\PalpiteResponseDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\partida\PartidaRequestDto.java
@@ -11,7 +7,6 @@ C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\s
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\selecao\SelecaoResponseDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\LoginRequestDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\LoginResponseDto.java
-C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\RankingDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\RecuperarSenhaRequestDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\RedefinirSenhaRequestDto.java
 C:\Users\Usuario\Documents\Faculdade\projeto-bomba-bet-hackathon\Java\bombaBet\src\main\java\com\example\bombaBet\api\dto\usuario\UsuarioRequestDto.java

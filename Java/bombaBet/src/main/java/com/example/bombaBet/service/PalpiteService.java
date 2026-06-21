@@ -37,38 +37,9 @@ public class PalpiteService {
                 new EntityNotFoundException("Palpite não encontrado com o ID: " + id));
     }
 
-    public List<Palpite> listarPorUsuario(Long usuarioId) {
-        return palpiteRepository.findByUsuarioOrderByPartidaDataHoraAsc(
-                usuarioService.buscarPorId(usuarioId));
-    }
-
     public List<Palpite> listarPorEmailUsuario(String email) {
         return palpiteRepository.findByUsuarioOrderByPartidaDataHoraAsc(
                 usuarioService.buscarPorEmail(email));
-    }
-
-    public List<Palpite> listarPorPartida(Long partidaId) {
-        return palpiteRepository.findByPartida(partidaService.buscarPorId(partidaId));
-    }
-
-    public Palpite buscarPorUsuarioEPartida(Long usuarioId, Long partidaId) {
-        Usuario usuario = usuarioService.buscarPorId(usuarioId);
-        Partida partida = partidaService.buscarPorId(partidaId);
-        return palpiteRepository.findByUsuarioAndPartida(usuario, partida).orElseThrow(() ->
-                new EntityNotFoundException("O usuário ainda não possui um palpite para esta partida"));
-    }
-
-    public boolean usuarioJaPalpitou(Long usuarioId, Long partidaId) {
-        return palpiteRepository.existsByUsuarioAndPartida(
-                usuarioService.buscarPorId(usuarioId), partidaService.buscarPorId(partidaId));
-    }
-
-    public long contarTodos() {
-        return palpiteRepository.count();
-    }
-
-    public long contarPorUsuario(Long usuarioId) {
-        return palpiteRepository.countByUsuario(usuarioService.buscarPorId(usuarioId));
     }
 
     // ---------------- Registrar / editar / excluir ----------------
