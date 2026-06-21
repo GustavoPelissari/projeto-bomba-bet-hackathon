@@ -7,7 +7,9 @@
     <div class="container-fluid">
 
         <a class="navbar-brand fw-bold" th:href="@{/admin}">
-            BombaBet Admin
+            <img th:src="@{/logo.png}"
+                 alt="BombaBet"
+                 style="width: 90px;">
         </a>
 
         <button class="navbar-toggler"
@@ -50,7 +52,7 @@
             <div class="d-flex align-items-center gap-3 text-white">
                 <span class="small">
                     Logado como:
-                    <strong>admin</strong>
+                    <strong>Admin</strong>
                 </span>
 
                 <form th:action="@{/logout}" method="post" class="m-0">
