@@ -1,7 +1,6 @@
 import { apiGet } from './api';
 import type { Match, MatchStatus, Phase, Team } from '../types/domain';
 
-// ---- Formatos crus vindos da API Java (DTOs em português) ----
 type SelecaoDto = {
   id: number;
   nome: string;
@@ -12,18 +11,17 @@ type SelecaoDto = {
 
 type PartidaDto = {
   id: number;
-  selecaoCasa: string | null;       // a API manda só o NOME da seleção
+  selecaoCasa: string | null;
   selecaoVisitante: string | null;
-  dataHora: string;                 // LocalDateTime ISO ("2026-06-11T20:00:00")
+  dataHora: string;
   estadio: string;
-  fase: string;                     // GRUPOS, OITAVAS_DE_FINAL, ...
+  fase: string;
   grupo: string | null;
-  status: string;                   // AGENDADA, EM_ANDAMENTO, ENCERRADA
+  status: string;
   golsCasa: number | null;
   golsVisitante: number | null;
 };
 
-// ---- Conversões de enum (português -> inglês) ----
 function mapStatus(status: string): MatchStatus {
   switch (status) {
     case 'EM_ANDAMENTO':
@@ -31,7 +29,7 @@ function mapStatus(status: string): MatchStatus {
     case 'ENCERRADA':
       return 'FINISHED';
     default:
-      return 'SCHEDULED'; // AGENDADA
+      return 'SCHEDULED';
   }
 }
 
@@ -50,11 +48,10 @@ function mapPhase(fase: string): Phase {
     case 'FINAL':
       return 'FINAL';
     default:
-      return 'GROUP'; // GRUPOS
+      return 'GROUP';
   }
 }
 
-// Monta um Team a partir do nome, buscando bandeira/sigla no mapa de seleções.
 function teamFromName(
   name: string | null,
   selecoes: Map<string, SelecaoDto>
@@ -69,7 +66,7 @@ function teamFromName(
   };
 }
 
-// Converte uma PartidaDto crua em Match (tipo do app).
+// Converte a PartidaDto crua da API no tipo Match usado pelas telas.
 function toMatch(p: PartidaDto, selecoes: Map<string, SelecaoDto>): Match {
   return {
     id: p.id,
@@ -85,13 +82,11 @@ function toMatch(p: PartidaDto, selecoes: Map<string, SelecaoDto>): Match {
   };
 }
 
-// Busca a lista de seleções e devolve um mapa nome -> seleção (para pegar bandeiras).
 async function carregarSelecoes(): Promise<Map<string, SelecaoDto>> {
   const selecoes = await apiGet<SelecaoDto[]>('/selecoes');
   return new Map(selecoes.map((s) => [s.nome, s]));
 }
 
-// Lista todas as partidas (GET /api/partidas).
 export async function listMatches(): Promise<Match[]> {
   const [partidas, selecoes] = await Promise.all([
     apiGet<PartidaDto[]>('/partidas'),
@@ -100,7 +95,6 @@ export async function listMatches(): Promise<Match[]> {
   return partidas.map((p) => toMatch(p, selecoes));
 }
 
-// Busca uma partida pelo id (GET /api/partidas/{id}).
 export async function getMatch(id: number): Promise<Match> {
   const [partida, selecoes] = await Promise.all([
     apiGet<PartidaDto>(`/partidas/${id}`),
@@ -109,11 +103,10 @@ export async function getMatch(id: number): Promise<Match> {
   return toMatch(partida, selecoes);
 }
 
-// Filtro opcional (mantido por compatibilidade) — filtra no cliente.
 export type MatchFilter = {
   phase?: Phase;
   status?: MatchStatus;
-  date?: string; // yyyy-mm-dd
+  date?: string;
 };
 
 export async function filterMatches(filter: MatchFilter): Promise<Match[]> {

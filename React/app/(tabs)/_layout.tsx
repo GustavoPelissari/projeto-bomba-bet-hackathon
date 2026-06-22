@@ -1,15 +1,12 @@
-import { Redirect, Tabs } from 'expo-router';     // Redirect: redireciona rota; Tabs: navegação por abas
-import { Ionicons } from '@expo/vector-icons';     // ícones das abas
-import { theme } from '../../constants/theme';     // tokens de design
-import { useAuth } from '../../contexts/AuthContext'; // hook de autenticação
+import { Redirect, Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
 
-// Layout do grupo de abas (a área logada do app: Início, Partidas, etc.).
 export default function TabsLayout() {
-  const { user, loading } = useAuth(); // lê o usuário logado e o estado de carregamento
+  const { user, loading } = useAuth();
 
-  // gate de autenticação: enquanto carrega a sessão, não redireciona;
-  // sem usuário, volta para o login.
-  // (Só redireciona depois que terminou de carregar E não há usuário.)
+  // Gate de autenticação: sem usuário (após carregar), volta para o login.
   if (!loading && !user) {
     return <Redirect href="/login" />;
   }
@@ -17,34 +14,32 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,                                 // sem cabeçalho padrão
-        tabBarActiveTintColor: theme.colors.accent,         // cor da aba ativa (dourado)
-        tabBarInactiveTintColor: theme.colors.textSecondary,// cor das abas inativas (cinza)
-        tabBarStyle: {                                      // aparência da barra de abas
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.accent,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
           height: 64,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarLabelStyle: {                                 // aparência do texto das abas
+        tabBarLabelStyle: {
           fontSize: theme.font.caption.fontSize,
           fontWeight: '600',
         },
       }}
     >
-      {/* Aba Início. name="index" -> arquivo (tabs)/index.tsx */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Início',                          // texto exibido na aba
-          tabBarAccessibilityLabel: 'Início',       // rótulo p/ leitor de tela
-          tabBarIcon: ({ color, size }) => (        // ícone (recebe cor/tamanho do sistema)
+          title: 'Início',
+          tabBarAccessibilityLabel: 'Início',
+          tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
-      {/* Aba Partidas */}
       <Tabs.Screen
         name="matches"
         options={{
@@ -55,7 +50,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Aba Palpites */}
       <Tabs.Screen
         name="predictions"
         options={{
@@ -66,7 +60,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Aba Ranking */}
       <Tabs.Screen
         name="ranking"
         options={{
@@ -77,7 +70,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      {/* Aba Perfil */}
       <Tabs.Screen
         name="profile"
         options={{

@@ -1,19 +1,18 @@
-import React from 'react'; // necessário para JSX
+import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // ícones (+ e -)
-import { theme } from '../constants/theme';     // tokens de design
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../constants/theme';
 
-// Props do "stepper" (seletor de número com botões + e -).
 type Props = {
-  label: string;                       // rótulo (ex.: nome do time)
-  value: number;                       // valor atual (gols)
-  onChange: (value: number) => void;   // chamada quando o valor muda
-  min?: number;                        // valor mínimo (padrão 0)
-  max?: number;                        // valor máximo (padrão 20)
-  disabled?: boolean;                  // desabilita os botões
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  disabled?: boolean;
 };
 
-// Componente para escolher o placar de um time, aumentando/diminuindo de 1 em 1.
+// Seletor de placar com botões + e -, limitado entre min e max.
 export default function ScoreStepper({
   label,
   value,
@@ -22,45 +21,40 @@ export default function ScoreStepper({
   max = 20,
   disabled = false,
 }: Props) {
-  // Diminui 1, sem passar do mínimo. Math.max garante que não fique abaixo de "min".
   const dec = () => onChange(Math.max(min, value - 1));
-  // Aumenta 1, sem passar do máximo. Math.min garante que não passe de "max".
   const inc = () => onChange(Math.min(max, value + 1));
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.label} numberOfLines={1}>{/* rótulo em 1 linha */}
+      <Text style={styles.label} numberOfLines={1}>
         {label}
       </Text>
       <View style={styles.controls}>
-        {/* Botão de diminuir */}
         <TouchableOpacity
           onPress={dec}
-          disabled={disabled || value <= min} // desativa no mínimo
+          disabled={disabled || value <= min}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={`Diminuir gols de ${label}`}
           accessibilityState={{ disabled: disabled || value <= min }}
           style={[
             styles.button,
-            (disabled || value <= min) && styles.buttonDisabled, // estilo "apagado" quando inativo
+            (disabled || value <= min) && styles.buttonDisabled,
           ]}
         >
           <Ionicons name="remove" size={24} color={theme.colors.accentText} />
         </TouchableOpacity>
 
-        {/* Número atual no centro */}
         <Text
           style={styles.value}
-          accessibilityLabel={`${label}: ${value} gols`} // leitura acessível do valor
+          accessibilityLabel={`${label}: ${value} gols`}
         >
           {value}
         </Text>
 
-        {/* Botão de aumentar */}
         <TouchableOpacity
           onPress={inc}
-          disabled={disabled || value >= max} // desativa no máximo
+          disabled={disabled || value >= max}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={`Aumentar gols de ${label}`}
@@ -77,12 +71,11 @@ export default function ScoreStepper({
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   wrapper: {
-    alignItems: 'center',     // centraliza rótulo e controles
-    gap: theme.spacing.sm,    // espaço entre rótulo e controles
-    flex: 1,                  // divide o espaço igualmente quando há dois steppers lado a lado
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
   },
   label: {
     ...theme.font.label,
@@ -90,25 +83,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   controls: {
-    flexDirection: 'row',     // [-] valor [+] na horizontal
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,    // espaço entre eles
+    gap: theme.spacing.md,
   },
   button: {
-    width: 48,                // botão quadrado de 48x48 (bom para toque)
+    width: 48,
     height: 48,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.accent, // fundo dourado
+    backgroundColor: theme.colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonDisabled: {
-    opacity: 0.4,             // meio transparente quando no limite
+    opacity: 0.4,
   },
   value: {
-    ...theme.font.h1,         // número grande
+    ...theme.font.h1,
     color: theme.colors.textPrimary,
-    minWidth: 40,            // largura mínima p/ o layout não "pular" ao mudar de 9 p/ 10
+    minWidth: 40,
     textAlign: 'center',
   },
 });

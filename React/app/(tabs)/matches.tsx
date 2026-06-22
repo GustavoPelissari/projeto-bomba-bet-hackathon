@@ -1,27 +1,25 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'; // React + hooks
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  RefreshControl,    // "puxar para atualizar"
-  ScrollView,        // rolagem (usada nos filtros horizontais)
-  SectionList,       // lista dividida em seções (por fase)
+  RefreshControl,
+  ScrollView,
+  SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';  // navegação + efeito ao focar a aba
-import { theme } from '../../constants/theme';         // tokens de design
-import { listMatches } from '../../services/matchService'; // busca partidas
-import { phaseLabel } from '../../utils/format';       // traduz a fase p/ português
-import type { Match, MatchStatus, Phase } from '../../types/domain'; // tipos
+import { router, useFocusEffect } from 'expo-router';
+import { theme } from '../../constants/theme';
+import { listMatches } from '../../services/matchService';
+import { phaseLabel } from '../../utils/format';
+import type { Match, MatchStatus, Phase } from '../../types/domain';
 import ScreenContainer from '../../components/ScreenContainer';
 import StateView from '../../components/StateView';
 import MatchCard from '../../components/MatchCard';
 
-// Tipos dos filtros: aceitam 'ALL' (todos) ou um valor específico.
 type PhaseFilter = 'ALL' | Phase;
 type StatusFilter = 'ALL' | MatchStatus;
 
-// Botões (chips) de filtro por FASE: cada um tem uma chave e um rótulo.
 const PHASE_CHIPS: { key: PhaseFilter; label: string }[] = [
   { key: 'ALL', label: 'Todas' },
   { key: 'GROUP', label: 'Grupos' },
@@ -33,7 +31,6 @@ const PHASE_CHIPS: { key: PhaseFilter; label: string }[] = [
   { key: 'FINAL', label: 'Final' },
 ];
 
-// Chips de filtro por SITUAÇÃO.
 const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
   { key: 'ALL', label: 'Todos' },
   { key: 'SCHEDULED', label: 'Agendada' },
@@ -41,14 +38,12 @@ const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
   { key: 'FINISHED', label: 'Encerrada' },
 ];
 
-// Ordem em que as seções (fases) aparecem na lista.
 const PHASE_ORDER: Phase[] = ['GROUP', 'ROUND_32', 'ROUND_16', 'QUARTER', 'SEMI', 'THIRD', 'FINAL'];
 
-// Componente de um "chip" (botão de filtro arredondado).
 function Chip({
-  label,     // texto do chip
-  selected,  // se está selecionado (muda a cor)
-  onPress,   // ação ao tocar
+  label,
+  selected,
+  onPress,
 }: {
   label: string;
   selected: boolean;
@@ -60,8 +55,8 @@ function Chip({
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={`Filtrar por ${label}`}
-      accessibilityState={{ selected }} // informa ao leitor de tela se está selecionado
-      hitSlop={{ top: 6, bottom: 6 }}   // amplia a área tocável
+      accessibilityState={{ selected }}
+      hitSlop={{ top: 6, bottom: 6 }}
       style={[styles.chip, selected && styles.chipSelected]}
     >
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
@@ -71,21 +66,17 @@ function Chip({
   );
 }
 
-// Tela de listagem de partidas (aba "Partidas").
 export default function MatchesScreen() {
-  const [matches, setMatches] = useState<Match[]>([]);          // todas as partidas
-  const [loading, setLoading] = useState(true);                // carregando?
-  const [error, setError] = useState<string | null>(null);     // erro?
-  const [phase, setPhase] = useState<PhaseFilter>('ALL');      // filtro de fase atual
-  const [status, setStatus] = useState<StatusFilter>('ALL');   // filtro de situação atual
-  const [date, setDate] = useState<string>('ALL');            // filtro de data (yyyy-mm-dd) ou 'ALL'
-  const [refreshing, setRefreshing] = useState(false);        // "puxar para atualizar" em andamento?
-  const jaCarregou = useRef(false);                           // já houve a 1ª carga?
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<PhaseFilter>('ALL');
+  const [status, setStatus] = useState<StatusFilter>('ALL');
+  const [date, setDate] = useState<string>('ALL');
+  const [refreshing, setRefreshing] = useState(false);
+  const jaCarregou = useRef(false);
 
-  // Busca as partidas. "modo" controla o indicador exibido:
-  //  - 'inicial'   : spinner de tela cheia (primeira carga)
-  //  - 'refresh'   : indicador do "puxar para atualizar"
-  //  - 'silencioso': atualiza em segundo plano (foco/auto-refresh), sem indicador
+  // Busca as partidas. "modo" define o indicador exibido (tela cheia, refresh ou silencioso).
   const carregar = useCallback(
     async (modo: 'inicial' | 'refresh' | 'silencioso' = 'inicial') => {
       if (modo === 'inicial') setLoading(true);
@@ -94,7 +85,6 @@ export default function MatchesScreen() {
       try {
         setMatches(await listMatches());
       } catch {
-        // Em segundo plano mantém os dados atuais e não mostra erro.
         if (modo === 'inicial') {
           setError('Não foi possível carregar as partidas. Tente novamente.');
         }
@@ -106,9 +96,7 @@ export default function MatchesScreen() {
     []
   );
 
-  // Recarrega ao abrir a aba e a cada 20s — assim mudanças feitas no painel
-  // admin (ex.: partida que entrou "ao vivo") aparecem sem reiniciar o app.
-  // O timer é encerrado ao sair da aba.
+  // Recarrega ao abrir a aba e a cada 20s para refletir mudanças do painel admin.
   useFocusEffect(
     useCallback(() => {
       carregar(jaCarregou.current ? 'silencioso' : 'inicial');
@@ -118,8 +106,7 @@ export default function MatchesScreen() {
     }, [carregar])
   );
 
-  // Datas disponíveis (extraídas das partidas) para o filtro por data.
-  // Cada partida vira o dia "yyyy-mm-dd"; mantemos os dias únicos, ordenados.
+  // Dias únicos (extraídos das partidas) para o filtro por data.
   const dateChips = useMemo(() => {
     const dias = Array.from(
       new Set(matches.map((m) => m.datetime.slice(0, 10)))
@@ -127,16 +114,14 @@ export default function MatchesScreen() {
     return [
       { key: 'ALL', label: 'Todas' },
       ...dias.map((d) => {
-        const [, mes, dia] = d.split('-'); // "yyyy-mm-dd" -> dd/mm
+        const [, mes, dia] = d.split('-');
         return { key: d, label: `${dia}/${mes}` };
       }),
     ];
   }, [matches]);
 
-  // Monta as seções da lista. useMemo recalcula só quando partidas/filtros mudam
-  // (evita refazer esse trabalho a cada render).
+  // Aplica os filtros e agrupa as partidas em seções por fase.
   const sections = useMemo(() => {
-    // 1) Aplica os filtros de fase, status e data.
     const filtered = matches.filter((m) => {
       if (phase !== 'ALL' && m.phase !== phase) return false;
       if (status !== 'ALL' && m.status !== status) return false;
@@ -144,23 +129,20 @@ export default function MatchesScreen() {
       return true;
     });
 
-    // 2) Para cada fase (na ordem definida), cria uma seção com suas partidas ordenadas.
     return PHASE_ORDER.map((p) => ({
-      title: phaseLabel(p), // título exibido (ex.: "Fase de Grupos")
+      title: phaseLabel(p),
       phase: p,
       data: filtered
-        .filter((m) => m.phase === p)               // só as partidas desta fase
-        .sort(                                        // ordenadas por data crescente
+        .filter((m) => m.phase === p)
+        .sort(
           (a, b) =>
             new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
         ),
-    })).filter((s) => s.data.length > 0); // remove seções vazias
+    })).filter((s) => s.data.length > 0);
   }, [matches, phase, status, date]);
 
-  // Bloco reutilizável dos filtros (duas linhas roláveis de chips).
   const Filters = (
     <View style={styles.filters}>
-      {/* Linha de filtros por fase (rolagem horizontal) */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -170,12 +152,11 @@ export default function MatchesScreen() {
           <Chip
             key={c.key}
             label={c.label}
-            selected={phase === c.key}        // marca o chip ativo
-            onPress={() => setPhase(c.key)}   // troca o filtro de fase
+            selected={phase === c.key}
+            onPress={() => setPhase(c.key)}
           />
         ))}
       </ScrollView>
-      {/* Linha de filtros por situação (rolagem horizontal) */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -190,7 +171,6 @@ export default function MatchesScreen() {
           />
         ))}
       </ScrollView>
-      {/* Linha de filtros por data (gerada a partir das partidas) */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -208,7 +188,6 @@ export default function MatchesScreen() {
     </View>
   );
 
-  // Durante carregamento/erro, mostra os filtros + o StateView.
   if (loading || error) {
     return (
       <ScreenContainer>
@@ -221,12 +200,11 @@ export default function MatchesScreen() {
   return (
     <ScreenContainer noPadding>
       <View style={styles.headerPad}>{Filters}</View>
-      {/* SectionList renderiza listas agrupadas por seção de forma performática. */}
       <SectionList
         sections={sections}
-        keyExtractor={(item) => String(item.id)} // chave única de cada partida
+        keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
-        refreshControl={                          // puxar para baixo = atualizar
+        refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => carregar('refresh')}
@@ -234,13 +212,13 @@ export default function MatchesScreen() {
             colors={[theme.colors.accent]}
           />
         }
-        stickySectionHeadersEnabled={false}       // cabeçalhos não "grudam" no topo ao rolar
-        renderSectionHeader={({ section }) => (    // como desenhar o título de cada seção
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) => (
           <Text style={styles.sectionTitle} accessibilityRole="header">
             {section.title}
           </Text>
         )}
-        renderItem={({ item }) => (                // como desenhar cada partida
+        renderItem={({ item }) => (
           <MatchCard
             match={item}
             onPress={() =>
@@ -248,7 +226,7 @@ export default function MatchesScreen() {
             }
           />
         )}
-        ListEmptyComponent={                       // exibido quando não há resultados
+        ListEmptyComponent={
           <StateView
             empty
             emptyIcon="filter-outline"
@@ -260,7 +238,6 @@ export default function MatchesScreen() {
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   headerPad: {
     paddingTop: theme.spacing.lg,
@@ -270,13 +247,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   chipRow: {
-    gap: theme.spacing.sm,                 // espaço entre chips
+    gap: theme.spacing.sm,
     paddingHorizontal: theme.spacing.lg,
   },
   chip: {
-    minHeight: 44,                         // altura confortável p/ toque
+    minHeight: 44,
     paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.radius.full,       // formato de pílula
+    borderRadius: theme.radius.full,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
@@ -284,7 +261,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipSelected: {
-    backgroundColor: theme.colors.accent,  // dourado quando selecionado
+    backgroundColor: theme.colors.accent,
     borderColor: theme.colors.accent,
   },
   chipText: {
@@ -292,7 +269,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   chipTextSelected: {
-    color: theme.colors.accentText,        // texto escuro sobre o dourado
+    color: theme.colors.accentText,
     fontWeight: '700',
   },
   list: {

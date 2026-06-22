@@ -1,25 +1,23 @@
-import React, { useCallback, useEffect, useState } from 'react'; // React + hooks
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator, // spinner do rodapé (paginação)
-  FlatList,          // lista performática
+  ActivityIndicator,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';          // ícones
-import { router } from 'expo-router';                    // navegação
-import { theme } from '../constants/theme';              // tokens de design
-import { getRanking } from '../services/rankingService'; // serviço de ranking (público)
-import { initialOf } from '../utils/format';             // inicial do nome (avatar)
-import type { RankingEntry } from '../types/domain';     // tipo de linha do ranking
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { theme } from '../constants/theme';
+import { getRanking } from '../services/rankingService';
+import { initialOf } from '../utils/format';
+import type { RankingEntry } from '../types/domain';
 import ScreenContainer from '../components/ScreenContainer';
 import StateView from '../components/StateView';
 
-// Quantidade de itens por página.
 const PAGE_SIZE = 50;
 
-// Avatar circular com a inicial do nome ("accent" = dourado p/ o 1º lugar).
 function Avatar({ name, accent }: { name: string; accent?: boolean }) {
   return (
     <View style={[styles.avatar, accent && styles.avatarAccent]}>
@@ -30,7 +28,7 @@ function Avatar({ name, accent }: { name: string; accent?: boolean }) {
   );
 }
 
-// Tela de Ranking do VISITANTE (acesso público, sem login).
+// Ranking acessível ao visitante (sem login).
 export default function RankingPublicoScreen() {
   const [items, setItems] = useState<RankingEntry[]>([]);
   const [page, setPage] = useState(1);
@@ -39,7 +37,6 @@ export default function RankingPublicoScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Carrega a primeira página do ranking.
   const loadFirst = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -74,7 +71,6 @@ export default function RankingPublicoScreen() {
     }
   }, [loadingMore, loading, items.length, total, page]);
 
-  // Barra superior com o botão "Voltar ao login".
   const TopBar = (
     <View style={styles.topBar}>
       <TouchableOpacity
@@ -140,7 +136,6 @@ export default function RankingPublicoScreen() {
               Por pontos · desempate por placares exatos
             </Text>
 
-            {/* Pódio (3 primeiros) */}
             <View style={styles.podium}>
               {podium.map((p) => (
                 <View

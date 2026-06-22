@@ -1,7 +1,6 @@
 import { apiGet } from './api';
 import type { RankingEntry } from '../types/domain';
 
-// Formato cru de um usuário vindo da API (UsuarioResponseDto).
 type UsuarioDto = {
   id: number;
   nome: string;
@@ -12,21 +11,18 @@ type UsuarioDto = {
   placaresExatos: number | null;
 };
 
-// Formato da página do Spring Data (GET /api/usuarios/ranking).
 type SpringPage<T> = {
   content: T[];
   totalElements: number;
-  number: number; // página atual (base 0)
+  number: number;
 };
 
-// Página de ranking no formato esperado pelas telas.
 export type RankingPage = {
   items: RankingEntry[];
   total: number;
   page: number;
 };
 
-// Converte UsuarioDto + posição -> RankingEntry.
 function toEntry(u: UsuarioDto, position: number): RankingEntry {
   return {
     position,
@@ -38,8 +34,7 @@ function toEntry(u: UsuarioDto, position: number): RankingEntry {
   };
 }
 
-// Busca uma página do ranking. A tela usa páginas a partir de 1;
-// o Spring usa a partir de 0, então convertemos (page - 1).
+// A tela pagina a partir de 1; o Spring a partir de 0 (por isso o page - 1).
 export async function getRanking(
   page = 1,
   size = 50
@@ -53,9 +48,8 @@ export async function getRanking(
   return { items, total: sp.totalElements, page };
 }
 
-// Retorna a linha do ranking do usuário logado (com sua posição real).
+// Retorna a linha do ranking do usuário logado com sua posição real.
 export async function getMyRankingEntry(): Promise<RankingEntry> {
-  // Pega o perfil logado (para saber o id) e uma fatia grande do ranking.
   const [me, sp] = await Promise.all([
     apiGet<UsuarioDto>('/usuarios/me'),
     apiGet<SpringPage<UsuarioDto>>('/usuarios/ranking?page=0&size=1000'),

@@ -1,34 +1,29 @@
-import React from 'react'; // necessário para JSX
+import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // ícones
-import { theme } from '../constants/theme';     // tokens de design
-import Button from './Button';                  // botão reutilizável (p/ "tentar novamente")
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../constants/theme';
+import Button from './Button';
 
-// Props que controlam qual estado exibir.
 type Props = {
-  loading?: boolean;                       // true = mostra carregando
-  error?: string | null;                   // texto do erro (se houver)
-  empty?: boolean;                         // true = lista vazia
-  emptyMessage?: string;                   // mensagem quando vazio
-  emptyIcon?: keyof typeof Ionicons.glyphMap; // ícone quando vazio
-  loadingMessage?: string;                 // mensagem ao carregar
-  onRetry?: () => void;                    // ação de tentar de novo / atualizar
+  loading?: boolean;
+  error?: string | null;
+  empty?: boolean;
+  emptyMessage?: string;
+  emptyIcon?: keyof typeof Ionicons.glyphMap;
+  loadingMessage?: string;
+  onRetry?: () => void;
 };
 
-/**
- * Renderiza os estados de carregando / erro / vazio.
- * Retorna null quando não há nenhum desses estados (sucesso com conteúdo).
- */
+// Renderiza os estados de carregando / erro / vazio. Retorna null quando há conteúdo.
 export default function StateView({
   loading,
   error,
   empty,
-  emptyMessage = 'Nada por aqui ainda.',   // valor padrão da mensagem de vazio
-  emptyIcon = 'file-tray-outline',         // ícone padrão de vazio
-  loadingMessage = 'Carregando…',          // mensagem padrão de carregamento
+  emptyMessage = 'Nada por aqui ainda.',
+  emptyIcon = 'file-tray-outline',
+  loadingMessage = 'Carregando…',
   onRetry,
 }: Props) {
-  // 1º caso: está carregando -> mostra spinner + mensagem.
   if (loading) {
     return (
       <View style={styles.container} accessibilityRole="progressbar">
@@ -38,7 +33,6 @@ export default function StateView({
     );
   }
 
-  // 2º caso: houve erro -> ícone, mensagem e (opcional) botão de tentar novamente.
   if (error) {
     return (
       <View style={styles.container}>
@@ -48,7 +42,6 @@ export default function StateView({
           color={theme.colors.danger}
           accessible={false}
         />
-        {/* accessibilityLiveRegion="polite": leitor anuncia o erro quando ele aparece */}
         <Text style={styles.message} accessibilityLiveRegion="polite">
           {error}
         </Text>
@@ -67,7 +60,6 @@ export default function StateView({
     );
   }
 
-  // 3º caso: lista vazia -> ícone, mensagem e (opcional) botão de atualizar.
   if (empty) {
     return (
       <View style={styles.container}>
@@ -93,18 +85,16 @@ export default function StateView({
     );
   }
 
-  // Nenhum estado especial: devolve null (a tela mostra o conteúdo real).
   return null;
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,                 // cresce para preencher o espaço disponível
-    alignItems: 'center',        // centraliza horizontalmente
-    justifyContent: 'center',    // centraliza verticalmente
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: theme.spacing.xl,
-    gap: theme.spacing.md,       // espaço entre ícone, texto e botão
+    gap: theme.spacing.md,
   },
   message: {
     ...theme.font.body,
@@ -112,6 +102,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   action: {
-    marginTop: theme.spacing.sm, // espaço acima do botão
+    marginTop: theme.spacing.sm,
   },
 });

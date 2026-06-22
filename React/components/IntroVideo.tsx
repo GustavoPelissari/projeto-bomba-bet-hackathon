@@ -1,38 +1,34 @@
-// Tela de introdução: reproduz o vídeo de abertura toda vez que o app inicia.
-import { useEffect } from 'react';                       // efeito p/ ouvir o fim do vídeo
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useVideoPlayer, VideoView } from 'expo-video';  // player de vídeo do Expo
-import { theme } from '../constants/theme';              // tokens de design
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { theme } from '../constants/theme';
 
-// Arquivo do vídeo embutido no bundle do app.
 const INTRO_SOURCE = require('../assets/Intro-bombaBet.mp4');
 
-// Props: chamado quando o vídeo termina (ou quando o usuário pula).
 type Props = { onFinish: () => void };
 
+// Reproduz o vídeo de abertura e chama onFinish quando ele termina.
 export function IntroVideo({ onFinish }: Props) {
-  // Cria o player. O callback inicial configura e dá play assim que o vídeo carrega.
   const player = useVideoPlayer(INTRO_SOURCE, (p) => {
-    p.loop = false;   // não repetir — toca uma vez e termina
-    p.muted = false;  // com áudio (troque para true se quiser mudo)
-    p.play();         // inicia a reprodução automaticamente
+    p.loop = false;
+    p.muted = false;
+    p.play();
   });
 
-  // Ouve o evento de "fim do vídeo" para avançar para o app.
   useEffect(() => {
     const sub = player.addListener('playToEnd', () => {
-      onFinish(); // vídeo chegou ao fim -> segue para o app
+      onFinish();
     });
-    return () => sub.remove(); // limpa o listener ao desmontar
+    return () => sub.remove();
   }, [player, onFinish]);
 
   return (
     <View style={styles.container}>
       <VideoView
-        style={styles.video}             // vídeo centralizado, menor que a tela
+        style={styles.video}
         player={player}
-        contentFit="contain"             // mostra o vídeo inteiro, sem cortar
-        nativeControls={false}           // sem controles de player
+        contentFit="contain"
+        nativeControls={false}
       />
     </View>
   );
@@ -41,12 +37,12 @@ export function IntroVideo({ onFinish }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // fundo escuro nas bordas do vídeo
-    alignItems: 'center',             // centraliza horizontalmente
-    justifyContent: 'center',         // centraliza verticalmente
+    backgroundColor: theme.colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   video: {
-    width: '80%',      // ocupa 80% da largura (reduz o tamanho da logo)
-    aspectRatio: 1,    // mantém um quadro proporcional; ajuste se o vídeo não for quadrado
+    width: '80%',
+    aspectRatio: 1,
   },
 });

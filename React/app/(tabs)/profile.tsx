@@ -1,40 +1,37 @@
-import React, { useCallback, useState } from 'react'; // React + hooks
+import React, { useCallback, useState } from 'react';
 import {
-  Alert,             // caixa de diálogo nativa (confirmações)
-  Image,             // exibe a foto de perfil (quando for URL)
+  Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';                 // ícones
-import { router, useFocusEffect } from 'expo-router';          // navegação + efeito ao focar
-import { theme } from '../../constants/theme';                 // tokens de design
-import { getProfile, deleteAccount } from '../../services/profileService'; // serviços de perfil
-import { useAuth } from '../../contexts/AuthContext';          // hook de autenticação (logout)
-import { initialOf } from '../../utils/format';                // inicial do nome (avatar)
-import type { UserProfile } from '../../types/domain';         // tipo do perfil
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { theme } from '../../constants/theme';
+import { getProfile, deleteAccount } from '../../services/profileService';
+import { useAuth } from '../../contexts/AuthContext';
+import { initialOf } from '../../utils/format';
+import type { UserProfile } from '../../types/domain';
 import ScreenContainer from '../../components/ScreenContainer';
 import StateView from '../../components/StateView';
 
-// Formato de uma ação da lista (editar, sair, excluir).
 type Action = {
-  key: string;                            // chave única (p/ a lista)
-  icon: keyof typeof Ionicons.glyphMap;   // ícone
-  label: string;                          // texto
-  danger?: boolean;                       // se true, exibe em vermelho
-  onPress: () => void;                    // ação ao tocar
+  key: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  danger?: boolean;
+  onPress: () => void;
 };
 
-// Tela de perfil (aba Perfil).
 export default function ProfileScreen() {
-  const { logout } = useAuth();                              // função de logout
-  const [profile, setProfile] = useState<UserProfile | null>(null); // perfil carregado
-  const [loading, setLoading] = useState(true);             // carregando?
-  const [error, setError] = useState<string | null>(null);  // erro?
+  const { logout } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Carrega o perfil do serviço.
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -47,29 +44,27 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  // Recarrega o perfil sempre que a aba ganha foco (reflete edições feitas em outra tela).
+  // Recarrega sempre que a aba ganha foco (reflete edições feitas em outra tela).
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load])
   );
 
-  // Confirmação de logout via diálogo nativo.
   const onLogout = () => {
     Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
-      { text: 'Cancelar', style: 'cancel' }, // botão que só fecha o diálogo
+      { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Sair',
-        style: 'destructive', // exibe em vermelho (iOS)
+        style: 'destructive',
         onPress: async () => {
-          await logout();             // limpa a sessão
-          router.replace('/login');   // volta para o login (sem poder voltar)
+          await logout();
+          router.replace('/login');
         },
       },
     ]);
   };
 
-  // Confirmação de exclusão de conta via diálogo nativo.
   const onDelete = () => {
     Alert.alert(
       'Excluir conta',
@@ -81,12 +76,10 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // TODO DELETE /me
-              await deleteAccount();      // exclui a conta (mock)
-              await logout();             // encerra a sessão
-              router.replace('/login');   // volta ao login
+              await deleteAccount();
+              await logout();
+              router.replace('/login');
             } catch {
-              // Em caso de falha, avisa o usuário.
               Alert.alert('Erro', 'Não foi possível excluir a conta.');
             }
           },
@@ -95,7 +88,6 @@ export default function ProfileScreen() {
     );
   };
 
-  // Enquanto carrega, há erro, ou o perfil ainda é nulo, mostra o StateView.
   if (loading || error || !profile) {
     return (
       <ScreenContainer>
@@ -104,13 +96,12 @@ export default function ProfileScreen() {
     );
   }
 
-  // Lista de ações exibidas no fim da tela.
   const actions: Action[] = [
     {
       key: 'edit',
       icon: 'create-outline',
       label: 'Editar perfil',
-      onPress: () => router.push('/profile/edit'), // abre a tela de edição
+      onPress: () => router.push('/profile/edit'),
     },
     {
       key: 'logout',
@@ -122,7 +113,7 @@ export default function ProfileScreen() {
       key: 'delete',
       icon: 'trash-outline',
       label: 'Excluir conta',
-      danger: true, // estilo de perigo (vermelho)
+      danger: true,
       onPress: onDelete,
     },
   ];
@@ -130,18 +121,14 @@ export default function ProfileScreen() {
   return (
     <ScreenContainer noPadding>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Cabeçalho do usuário */}
-        {/* Avatar (inicial), nome e e-mail */}
         <View style={styles.head}>
           {profile.avatar ? (
-            // Tem foto (URL) -> exibe a imagem.
             <Image
               source={{ uri: profile.avatar }}
               style={styles.avatar}
               accessibilityLabel="Foto de perfil"
             />
           ) : (
-            // Sem foto -> mostra a inicial do nome.
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initialOf(profile.name)}</Text>
             </View>
@@ -150,8 +137,6 @@ export default function ProfileScreen() {
           <Text style={styles.email}>{profile.email}</Text>
         </View>
 
-        {/* Estatísticas */}
-        {/* Três métricas: pontos, posição e placares exatos */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{profile.totalPoints}</Text>
@@ -169,8 +154,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Ações */}
-        {/* Renderiza cada ação como uma linha tocável */}
         <View style={styles.actions}>
           {actions.map((a) => (
             <TouchableOpacity
@@ -184,7 +167,6 @@ export default function ProfileScreen() {
               <Ionicons
                 name={a.icon}
                 size={22}
-                // vermelho se for ação de perigo, branco caso contrário
                 color={a.danger ? theme.colors.danger : theme.colors.textPrimary}
                 accessible={false}
               />
@@ -194,7 +176,7 @@ export default function ProfileScreen() {
                 {a.label}
               </Text>
               <Ionicons
-                name="chevron-forward" // seta indicando que abre outra tela/ação
+                name="chevron-forward"
                 size={20}
                 color={theme.colors.textSecondary}
                 accessible={false}
@@ -207,7 +189,6 @@ export default function ProfileScreen() {
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   scroll: {
     padding: theme.spacing.lg,
@@ -221,7 +202,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 88,
     height: 88,
-    borderRadius: theme.radius.full,         // círculo
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.surfaceAlt,
     borderWidth: 2,
     borderColor: theme.colors.accent,
@@ -243,7 +224,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   statsCard: {
-    flexDirection: 'row',                    // três métricas lado a lado
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
@@ -258,17 +239,17 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   statDivider: {
-    width: 1,                                // divisória vertical entre métricas
+    width: 1,
     height: 40,
     backgroundColor: theme.colors.border,
   },
   statValue: {
     ...theme.font.h2,
-    color: theme.colors.accent,              // pontos em dourado
+    color: theme.colors.accent,
   },
   statValuePlain: {
     ...theme.font.h2,
-    color: theme.colors.textPrimary,         // demais valores em branco
+    color: theme.colors.textPrimary,
   },
   statLabel: {
     ...theme.font.caption,
@@ -283,7 +264,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.md,
-    minHeight: 56,                           // altura confortável p/ toque
+    minHeight: 56,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -293,9 +274,9 @@ const styles = StyleSheet.create({
   actionLabel: {
     ...theme.font.body,
     color: theme.colors.textPrimary,
-    flex: 1,                                 // empurra a seta p/ a direita
+    flex: 1,
   },
   actionDanger: {
-    color: theme.colors.danger,             // texto vermelho p/ ações perigosas
+    color: theme.colors.danger,
   },
 });

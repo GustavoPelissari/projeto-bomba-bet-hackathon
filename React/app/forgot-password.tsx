@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // React + hook de estado
+import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,26 +8,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // ícones
-import { router } from 'expo-router';            // navegação imperativa
-import { theme } from '../constants/theme';      // tokens de design
-import { forgotPassword, resetPassword } from '../services/authService'; // RF-003
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { theme } from '../constants/theme';
+import { forgotPassword, resetPassword } from '../services/authService';
 import Button from '../components/Button';
 import Input from '../components/Input';
 
-// Regex para validar formato de e-mail.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Etapas do fluxo de recuperação de senha.
 type Stage = 'request' | 'reset' | 'done';
 
-// Tela de recuperação de senha (RF-003).
 export default function ForgotPasswordScreen() {
-  const [stage, setStage] = useState<Stage>('request'); // etapa atual
-  const [email, setEmail] = useState('');               // e-mail informado
-  const [token, setToken] = useState('');               // código de recuperação
-  const [password, setPassword] = useState('');         // nova senha
-  const [confirm, setConfirm] = useState('');           // confirmação da nova senha
+  const [stage, setStage] = useState<Stage>('request');
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -40,9 +37,9 @@ export default function ForgotPasswordScreen() {
     setError(null);
     setLoading(true);
     try {
-      const t = await forgotPassword(email); // chama a API e recebe o token
-      setToken(t);                           // pré-preenche o código
-      setStage('reset');                     // avança para a redefinição
+      const t = await forgotPassword(email);
+      setToken(t);
+      setStage('reset');
     } catch (e) {
       setError(
         e instanceof Error ? e.message : 'Não foi possível solicitar a recuperação.'
@@ -69,8 +66,8 @@ export default function ForgotPasswordScreen() {
     setError(null);
     setLoading(true);
     try {
-      await resetPassword(token.trim(), password); // troca a senha na API
-      setStage('done');                            // mostra a confirmação
+      await resetPassword(token.trim(), password);
+      setStage('done');
     } catch (e) {
       setError(
         e instanceof Error ? e.message : 'Não foi possível redefinir a senha.'
@@ -91,7 +88,6 @@ export default function ForgotPasswordScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          {/* Ícone que reflete a etapa atual. */}
           <View style={styles.iconCircle}>
             <Ionicons
               name={stage === 'done' ? 'checkmark-circle-outline' : 'lock-closed-outline'}
@@ -102,7 +98,6 @@ export default function ForgotPasswordScreen() {
           </View>
 
           {stage === 'request' && (
-            // ----- Etapa 1: informar o e-mail -----
             <>
               <Text style={styles.title} accessibilityRole="header">
                 Recuperar senha
@@ -138,7 +133,6 @@ export default function ForgotPasswordScreen() {
           )}
 
           {stage === 'reset' && (
-            // ----- Etapa 2: código + nova senha -----
             <>
               <Text style={styles.title} accessibilityRole="header">
                 Redefinir senha
@@ -187,7 +181,6 @@ export default function ForgotPasswordScreen() {
           )}
 
           {stage === 'done' && (
-            // ----- Etapa 3: sucesso -----
             <>
               <Text style={styles.title} accessibilityRole="header">
                 Senha redefinida!
@@ -209,7 +202,6 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   flex: {
     flex: 1,

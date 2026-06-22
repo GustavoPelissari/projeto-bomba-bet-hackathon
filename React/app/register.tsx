@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // React + hook de estado
+import React, { useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -9,16 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';              // navegação imperativa
-import { theme } from '../constants/theme';        // tokens de design
-import { useAuth } from '../contexts/AuthContext'; // hook de autenticação
+import { router } from 'expo-router';
+import { theme } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
 
-// Regex para validar formato de e-mail.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Formato do objeto de erros: cada campo pode ter (ou não) uma mensagem.
 type Errors = {
   name?: string;
   email?: string;
@@ -26,37 +24,33 @@ type Errors = {
   confirm?: string;
 };
 
-// Tela de cadastro de nova conta.
 export default function RegisterScreen() {
-  const { register } = useAuth();                       // função de cadastro (chama a API e já loga)
-  const [name, setName] = useState('');                 // estado do nome
-  const [email, setEmail] = useState('');               // estado do e-mail
-  const [password, setPassword] = useState('');         // estado da senha
-  const [confirm, setConfirm] = useState('');           // estado da confirmação de senha
-  const [errors, setErrors] = useState<Errors>({});     // erros por campo
-  const [loading, setLoading] = useState(false);        // spinner do botão
+  const { register } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [errors, setErrors] = useState<Errors>({});
+  const [loading, setLoading] = useState(false);
 
   // Valida todos os campos e devolve true se estiver tudo certo.
   const validate = (): boolean => {
-    const next: Errors = {}; // acumula erros encontrados
-    if (!name.trim()) next.name = 'Informe seu nome.';                       // nome obrigatório
-    if (!EMAIL_RE.test(email)) next.email = 'E-mail inválido.';              // e-mail válido
-    if (password.length < 6) next.password = 'A senha deve ter ao menos 6 caracteres.'; // senha mínima
-    if (confirm !== password) next.confirm = 'As senhas não coincidem.';    // confirmação igual
-    setErrors(next); // atualiza o estado de erros (mostra nas telas)
-    return Object.keys(next).length === 0; // true se não houver nenhuma chave de erro
+    const next: Errors = {};
+    if (!name.trim()) next.name = 'Informe seu nome.';
+    if (!EMAIL_RE.test(email)) next.email = 'E-mail inválido.';
+    if (password.length < 6) next.password = 'A senha deve ter ao menos 6 caracteres.';
+    if (confirm !== password) next.confirm = 'As senhas não coincidem.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
-  // Executa ao tocar em "Cadastrar".
   const onSubmit = async () => {
-    if (!validate()) return; // se inválido, para aqui
+    if (!validate()) return;
     setLoading(true);
     try {
-      // Cadastra na API (POST /api/auth/cadastro) e já faz login automaticamente.
       await register(name, email, password);
-      router.replace('/(tabs)');    // vai para a área logada (abas)
+      router.replace('/(tabs)');
     } catch (e) {
-      // Mostra o erro vindo do backend (ex.: "e-mail já cadastrado") no campo e-mail.
       setErrors({
         email: e instanceof Error ? e.message : 'Não foi possível cadastrar.',
       });
@@ -84,17 +78,15 @@ export default function RegisterScreen() {
           />
           <Text style={styles.subtitle}>Crie sua conta</Text>
 
-          {/* Campo nome (erro específico vem de errors.name) */}
           <Input
             label="Nome"
             icon="person-outline"
             value={name}
             onChangeText={setName}
             placeholder="Seu nome completo"
-            autoCapitalize="words" // capitaliza cada palavra
+            autoCapitalize="words"
             error={errors.name}
           />
-          {/* Campo e-mail */}
           <Input
             label="E-mail"
             icon="mail-outline"
@@ -106,7 +98,6 @@ export default function RegisterScreen() {
             autoComplete="email"
             error={errors.email}
           />
-          {/* Campo senha */}
           <Input
             label="Senha"
             icon="lock-closed-outline"
@@ -116,7 +107,6 @@ export default function RegisterScreen() {
             secureTextEntry
             error={errors.password}
           />
-          {/* Campo confirmação de senha */}
           <Input
             label="Confirmar senha"
             icon="lock-closed-outline"
@@ -134,11 +124,10 @@ export default function RegisterScreen() {
             style={styles.submit}
           />
 
-          {/* Rodapé: voltar para o login */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Já tem conta? </Text>
             <TouchableOpacity
-              onPress={() => router.back()} // volta à tela anterior (login)
+              onPress={() => router.back()}
               accessibilityRole="link"
               accessibilityLabel="Entrar"
             >
@@ -151,7 +140,6 @@ export default function RegisterScreen() {
   );
 }
 
-// Estilos (idênticos em espírito aos da tela de login).
 const styles = StyleSheet.create({
   flex: {
     flex: 1,

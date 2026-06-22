@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'; // React + hooks
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,16 +6,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';                 // ícones
-// useLocalSearchParams lê os parâmetros da rota (o id da partida na URL).
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { theme } from '../../constants/theme';                 // tokens de design
-import { getMatch } from '../../services/matchService';        // busca uma partida
+import { theme } from '../../constants/theme';
+import { getMatch } from '../../services/matchService';
 import {
-  getPredictionByMatch, // busca o palpite existente da partida
-  savePrediction,       // salva/atualiza o palpite
+  getPredictionByMatch,
+  savePrediction,
 } from '../../services/predictionService';
-import { formatDate, phaseLabel } from '../../utils/format';   // helpers
+import { formatDate, phaseLabel } from '../../utils/format';
 import type { Match, Prediction, PredictionCriterion } from '../../types/domain';
 import ScreenContainer from '../../components/ScreenContainer';
 import StateView from '../../components/StateView';
@@ -24,42 +23,38 @@ import TeamRow from '../../components/TeamRow';
 import ScoreStepper from '../../components/ScoreStepper';
 import Button from '../../components/Button';
 
-// Texto detalhado de cada critério, incluindo a pontuação.
 const CRITERION_LABEL: Record<PredictionCriterion, string> = {
   EXACT: 'Placar exato (10 pts)',
   WINNER: 'Acertou o vencedor (5 pts)',
   MISS: 'Sem pontos (0)',
 };
 
-// Tela de detalhes de uma partida. O nome do arquivo [id] cria uma rota dinâmica.
+// Detalhes da partida. O nome do arquivo [id] cria uma rota dinâmica.
 export default function MatchDetailScreen() {
-  // Lê o "id" da rota (vem como string) e converte para número.
   const { id } = useLocalSearchParams<{ id: string }>();
   const matchId = Number(id);
 
-  const [match, setMatch] = useState<Match | null>(null);            // a partida
-  const [prediction, setPrediction] = useState<Prediction | null>(null); // palpite existente
-  const [home, setHome] = useState(0);                              // placar palpitado mandante
-  const [away, setAway] = useState(0);                              // placar palpitado visitante
-  const [loading, setLoading] = useState(true);                    // carregando a tela?
-  const [error, setError] = useState<string | null>(null);         // erro de carga?
-  const [saving, setSaving] = useState(false);                     // salvando palpite?
-  const [saveError, setSaveError] = useState<string | null>(null); // erro ao salvar?
-  const [saved, setSaved] = useState(false);                       // mostrou "Palpite salvo!"?
+  const [match, setMatch] = useState<Match | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [home, setHome] = useState(0);
+  const [away, setAway] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
-  // Carrega a partida e o palpite atual (se houver).
+  // Carrega a partida e o palpite atual (se houver) em paralelo.
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Busca partida e palpite em paralelo.
       const [m, p] = await Promise.all([
         getMatch(matchId),
         getPredictionByMatch(matchId),
       ]);
       setMatch(m);
       setPrediction(p);
-      // Se já existe palpite, pré-preenche os steppers com os valores salvos.
       if (p) {
         setHome(p.homeGuess);
         setAway(p.awayGuess);
@@ -69,25 +64,21 @@ export default function MatchDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [matchId]); // recria a função se o id mudar
+  }, [matchId]);
 
-  // Carrega os dados ao montar (ou quando "load" mudar por causa do id).
   useEffect(() => {
     load();
   }, [load]);
 
-  // Salva (ou atualiza) o palpite.
   const onSave = async () => {
     setSaving(true);
     setSaveError(null);
     setSaved(false);
     try {
-      // TODO POST/PUT /predictions
       const result = await savePrediction(matchId, home, away);
-      setPrediction(result); // atualiza o palpite na tela
-      setSaved(true);        // exibe a confirmação "Palpite salvo!"
+      setPrediction(result);
+      setSaved(true);
     } catch (e) {
-      // Usa a mensagem do erro, se for um Error; senão, um texto genérico.
       setSaveError(
         e instanceof Error ? e.message : 'Não foi possível salvar o palpite.'
       );
@@ -96,10 +87,9 @@ export default function MatchDetailScreen() {
     }
   };
 
-  // Cabeçalho com botão "Voltar" (reaproveitado nos estados de loading/erro e sucesso).
   const Header = (
     <TouchableOpacity
-      onPress={() => router.back()} // volta à tela anterior
+      onPress={() => router.back()}
       accessibilityRole="button"
       accessibilityLabel="Voltar"
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -110,7 +100,6 @@ export default function MatchDetailScreen() {
     </TouchableOpacity>
   );
 
-  // Estado de carregamento/erro (ou partida ainda nula).
   if (loading || error || !match) {
     return (
       <ScreenContainer>
@@ -120,23 +109,19 @@ export default function MatchDetailScreen() {
     );
   }
 
-  // Atalhos para os estados da partida.
-  const isScheduled = match.status === 'SCHEDULED'; // ainda dá p/ palpitar
-  const isFinished = match.status === 'FINISHED';   // já terminou
-  const showScore = !isScheduled;                   // mostra placar ao vivo e encerrada
+  const isScheduled = match.status === 'SCHEDULED';
+  const isFinished = match.status === 'FINISHED';
+  const showScore = !isScheduled;
 
   return (
     <ScreenContainer noPadding>
       <ScrollView contentContainerStyle={styles.scroll}>
         {Header}
 
-        {/* Meta */}
-        {/* Bloco de informações: situação, fase/grupo, estádio e data */}
         <View style={styles.metaBlock}>
           <StatusPill status={match.status} />
           <Text style={styles.phase}>
             {phaseLabel(match.phase)}
-            {/* Mostra o grupo só se a partida tiver um (fases de grupos) */}
             {match.group ? ` · Grupo ${match.group}` : ''}
           </Text>
           <View style={styles.metaRow}>
@@ -159,8 +144,6 @@ export default function MatchDetailScreen() {
           </View>
         </View>
 
-        {/* Confronto */}
-        {/* Mandante x Visitante em tamanho grande (placar aparece ao vivo e encerrada) */}
         <View style={styles.confronto}>
           <TeamRow
             team={match.homeTeam}
@@ -175,13 +158,10 @@ export default function MatchDetailScreen() {
           />
         </View>
 
-        {/* Área de palpite */}
         {isScheduled ? (
-          // Partida agendada: mostra os controles para palpitar.
           <View style={styles.predictionBox}>
             <Text style={styles.predictionTitle}>Seu palpite</Text>
             <View style={styles.steppers}>
-              {/* Stepper do mandante (controla o estado "home") */}
               <ScoreStepper
                 label={match.homeTeam.fifaCode}
                 value={home}
@@ -189,7 +169,6 @@ export default function MatchDetailScreen() {
                 disabled={saving}
               />
               <Text style={styles.versusSmall}>x</Text>
-              {/* Stepper do visitante (controla o estado "away") */}
               <ScoreStepper
                 label={match.awayTeam.fifaCode}
                 value={away}
@@ -198,7 +177,6 @@ export default function MatchDetailScreen() {
               />
             </View>
 
-            {/* Mensagem de erro ao salvar, se houver */}
             {saveError ? (
               <View style={styles.feedbackRow}>
                 <Ionicons
@@ -212,7 +190,6 @@ export default function MatchDetailScreen() {
                 </Text>
               </View>
             ) : null}
-            {/* Mensagem de sucesso ao salvar, se aplicável */}
             {saved ? (
               <View style={styles.feedbackRow}>
                 <Ionicons
@@ -227,7 +204,6 @@ export default function MatchDetailScreen() {
               </View>
             ) : null}
 
-            {/* Botão muda o texto conforme já exista palpite ou não */}
             <Button
               title={prediction ? 'Atualizar palpite' : 'Salvar palpite'}
               onPress={onSave}
@@ -237,7 +213,6 @@ export default function MatchDetailScreen() {
             />
           </View>
         ) : (
-          // Partida ao vivo ou encerrada: palpites bloqueados.
           <View style={styles.lockedBox}>
             <Ionicons
               name="lock-closed"
@@ -251,8 +226,7 @@ export default function MatchDetailScreen() {
           </View>
         )}
 
-        {/* Resultado do palpite (RF-024) */}
-        {/* Só aparece quando a partida terminou E existe um palpite */}
+        {/* Resultado do palpite (RF-024): só quando a partida terminou e há palpite. */}
         {isFinished && prediction ? (
           <View style={styles.resultBox}>
             <Text style={styles.predictionTitle}>Resultado do seu palpite</Text>
@@ -266,7 +240,6 @@ export default function MatchDetailScreen() {
               <Text style={styles.resultLabel}>Pontos obtidos</Text>
               <Text style={styles.resultPoints}>{prediction.points ?? 0}</Text>
             </View>
-            {/* Critério de pontuação, com ícone verde/vermelho */}
             {prediction.criterion ? (
               <View style={styles.criterionRow}>
                 <Ionicons
@@ -295,7 +268,6 @@ export default function MatchDetailScreen() {
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   scroll: {
     padding: theme.spacing.lg,
@@ -306,7 +278,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.xs,
     minHeight: 48,
-    alignSelf: 'flex-start', // ocupa só a largura do conteúdo
+    alignSelf: 'flex-start',
   },
   backText: {
     ...theme.font.body,
@@ -357,7 +329,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   steppers: {
-    flexDirection: 'row',     // dois steppers + "x" no centro
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.md,
@@ -365,7 +337,7 @@ const styles = StyleSheet.create({
   versusSmall: {
     ...theme.font.h2,
     color: theme.colors.textSecondary,
-    marginTop: theme.spacing.lg, // alinha o "x" com os números dos steppers
+    marginTop: theme.spacing.lg,
   },
   saveBtn: {
     marginTop: theme.spacing.xs,
@@ -403,7 +375,7 @@ const styles = StyleSheet.create({
   resultBox: {
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.accent, // destaque dourado no resultado
+    borderColor: theme.colors.accent,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     marginTop: theme.spacing.lg,

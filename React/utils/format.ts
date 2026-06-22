@@ -1,6 +1,5 @@
 import type { Phase } from '../types/domain';
 
-// Rótulos das fases em português.
 const PHASE_LABELS: Record<Phase, string> = {
   GROUP: 'Fase de Grupos',
   ROUND_32: '16-avos de Final',
@@ -15,7 +14,7 @@ export function phaseLabel(phase: Phase): string {
   return PHASE_LABELS[phase] ?? phase;
 }
 
-/** Formata uma data ISO para PT-BR, ex.: "14 de jun, 16:00". */
+// Formata uma data ISO para PT-BR, ex.: "14 de jun, 16:00".
 export function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
@@ -30,7 +29,7 @@ export function formatDate(iso: string): string {
   return `${datePart}, ${timePart}`;
 }
 
-/** Apenas a data por extenso, ex.: "segunda, 14 de junho". */
+// Apenas a data por extenso, ex.: "segunda, 14 de junho".
 export function formatLongDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
@@ -41,12 +40,10 @@ export function formatLongDate(iso: string): string {
   }).format(date);
 }
 
-// Primeiro nome.
 export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
-// Inicial (1ª letra maiúscula) — usada nos avatares.
 export function initialOf(name: string): string {
   return (name.trim()[0] ?? '?').toUpperCase();
 }

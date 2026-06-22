@@ -1,36 +1,32 @@
-import React from 'react'; // necessário para JSX
+import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../constants/theme';   // tokens de design
-import type { Team } from '../types/domain';   // tipo do time
+import { theme } from '../constants/theme';
+import type { Team } from '../types/domain';
 
-// Detecta se a bandeira é uma URL (imagem) ou um emoji/texto.
 function isUrl(value: string): boolean {
   return /^https?:\/\//i.test(value);
 }
 
-// Props da linha de time.
 type Props = {
-  team: Team;                 // dados do time (bandeira, nome, sigla)
-  score?: number | null;      // placar (opcional); se ausente/null, não exibe
-  /** Destaca a linha (ex.: vencedor ou seleção). */
-  large?: boolean;            // versão maior (usada na tela de detalhes)
-  highlight?: boolean;        // destaca o nome em dourado/negrito
+  team: Team;
+  score?: number | null;
+  /** Versão maior, usada na tela de detalhes. */
+  large?: boolean;
+  highlight?: boolean;
 };
 
-// Linha que mostra bandeira + nome + sigla de um time, com placar opcional.
+// Linha com bandeira + nome + sigla de um time, com placar opcional.
 export default function TeamRow({ team, score, large, highlight }: Props) {
   return (
     <View
       style={styles.row}
       accessible
-      // Leitura acessível: inclui o placar só quando ele existe.
       accessibilityLabel={
         score != null
           ? `${team.name}, ${score} gols`
           : team.name
       }
     >
-      {/* Bandeira: se for URL, mostra a imagem; senão, mostra o emoji/texto. */}
       {team.flag && isUrl(team.flag) ? (
         <Image
           source={{ uri: team.flag }}
@@ -50,64 +46,62 @@ export default function TeamRow({ team, score, large, highlight }: Props) {
         <Text
           style={[
             styles.name,
-            large && styles.nameLarge,     // fonte maior se "large"
-            highlight && styles.highlight, // dourado/negrito se "highlight"
+            large && styles.nameLarge,
+            highlight && styles.highlight,
           ]}
-          numberOfLines={1} // nome em 1 linha (trunca se for muito longo)
+          numberOfLines={1}
         >
           {team.name}
         </Text>
-        <Text style={styles.code}>{team.fifaCode}</Text>{/* sigla FIFA, ex.: BRA */}
+        <Text style={styles.code}>{team.fifaCode}</Text>
       </View>
       {score != null ? (
-        // Placar à direita, só quando informado.
         <Text style={[styles.score, large && styles.scoreLarge]}>{score}</Text>
       ) : null}
     </View>
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',     // bandeira + nomes + placar na horizontal
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,    // espaço entre os elementos
+    gap: theme.spacing.md,
   },
   flag: {
-    fontSize: 24,             // tamanho normal da bandeira (emoji)
+    fontSize: 24,
   },
   flagLarge: {
-    fontSize: 40,             // tamanho ampliado da bandeira (emoji)
+    fontSize: 40,
   },
   flagImage: {
-    width: 32,                // bandeira por imagem (URL) — tamanho normal
+    width: 32,
     height: 22,
-    borderRadius: 3,          // cantos levemente arredondados
-    backgroundColor: theme.colors.surfaceAlt, // fundo enquanto carrega
+    borderRadius: 3,
+    backgroundColor: theme.colors.surfaceAlt,
   },
   flagImageLarge: {
-    width: 56,                // bandeira por imagem — tamanho grande (tela de detalhes)
+    width: 56,
     height: 38,
     borderRadius: 4,
   },
   names: {
-    flex: 1,                  // ocupa o espaço do meio (empurra o placar p/ a direita)
-    flexDirection: 'row',     // nome + sigla lado a lado
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
   },
   name: {
     ...theme.font.body,
     color: theme.colors.textPrimary,
-    flexShrink: 1,            // permite o nome encolher se faltar espaço
+    flexShrink: 1,
   },
   nameLarge: {
-    ...theme.font.title,      // nome em tamanho de título
+    ...theme.font.title,
   },
   highlight: {
-    color: theme.colors.accent, // dourado
-    fontWeight: '700',          // negrito
+    color: theme.colors.accent,
+    fontWeight: '700',
   },
   code: {
     ...theme.font.caption,
@@ -116,10 +110,10 @@ const styles = StyleSheet.create({
   score: {
     ...theme.font.title,
     color: theme.colors.textPrimary,
-    minWidth: 24,             // largura mínima para alinhar placares
+    minWidth: 24,
     textAlign: 'center',
   },
   scoreLarge: {
-    ...theme.font.h1,         // placar grande na tela de detalhes
+    ...theme.font.h1,
   },
 });

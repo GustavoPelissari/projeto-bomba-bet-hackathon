@@ -1,52 +1,42 @@
-/**
- * Tipos de domínio do app (lado React), em inglês.
- * Os serviços (services/) convertem os DTOs em português vindos da API Java
- * para estes tipos. Assim as telas continuam usando nomes em inglês.
- */
+// Tipos de domínio do app (em inglês). Os services convertem os DTOs em português
+// vindos da API Java para estes tipos.
 
-// Fases do torneio. ROUND_32 = 16-avos; THIRD = disputa de 3º lugar.
 export type Phase = 'GROUP' | 'ROUND_32' | 'ROUND_16' | 'QUARTER' | 'SEMI' | 'THIRD' | 'FINAL';
 
-// Situação da partida.
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED';
 
-// Seleção/time.
 export type Team = {
   id: number;
-  name: string;     // nome (ex.: "Brasil")
-  fifaCode: string; // sigla FIFA (ex.: "BRA")
-  flag: string;     // bandeira (emoji ou texto)
-  group: string;    // grupo (ex.: "A")
+  name: string;
+  fifaCode: string;
+  flag: string;
+  group: string;
 };
 
-// Partida.
 export type Match = {
   id: number;
   phase: Phase;
   group?: string;
   stadium: string;
-  datetime: string;          // ISO (vem de dataHora)
+  datetime: string;
   status: MatchStatus;
-  homeTeam: Team;            // mandante
-  awayTeam: Team;            // visitante
-  homeScore: number | null;  // gols do mandante (null se sem resultado)
-  awayScore: number | null;  // gols do visitante
+  homeTeam: Team;
+  awayTeam: Team;
+  homeScore: number | null;
+  awayScore: number | null;
 };
 
-// Critério de pontuação de um palpite.
 export type PredictionCriterion = 'EXACT' | 'WINNER' | 'MISS';
 
-// Palpite do usuário.
 export type Prediction = {
   id: number;
   matchId: number;
   homeGuess: number;
   awayGuess: number;
-  points: number | null;                 // null enquanto não apurado (PENDENTE)
-  criterion: PredictionCriterion | null; // null enquanto não apurado
+  points: number | null;
+  criterion: PredictionCriterion | null;
 };
 
-// Linha do ranking.
 export type RankingEntry = {
   position: number;
   userId: number;
@@ -56,7 +46,6 @@ export type RankingEntry = {
   exactScores: number;
 };
 
-// Perfil do usuário logado.
 export type UserProfile = {
   id: number;
   name: string;

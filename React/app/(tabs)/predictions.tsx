@@ -1,66 +1,57 @@
-import React, { useCallback, useState } from 'react'; // React + hooks
+import React, { useCallback, useState } from 'react';
 import {
-  FlatList,          // lista performática (renderiza só o que está visível)
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';                 // ícones
-import { router, useFocusEffect } from 'expo-router';          // navegação + efeito ao focar a aba
-import { theme } from '../../constants/theme';                 // tokens de design
-import { listMyPredictions } from '../../services/predictionService'; // busca palpites
-import { listMatches } from '../../services/matchService';     // busca partidas
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { theme } from '../../constants/theme';
+import { listMyPredictions } from '../../services/predictionService';
+import { listMatches } from '../../services/matchService';
 import type { Match, Prediction, PredictionCriterion } from '../../types/domain';
 import ScreenContainer from '../../components/ScreenContainer';
 import StateView from '../../components/StateView';
 import TeamRow from '../../components/TeamRow';
 
-// Texto curto exibido para cada critério de pontuação.
 const CRITERION_SHORT: Record<PredictionCriterion, string> = {
   EXACT: 'Placar exato',
   WINNER: 'Acertou o vencedor',
   MISS: 'Sem pontos',
 };
 
-// Cada item da lista junta um palpite com a partida correspondente.
 type Item = { prediction: Prediction; match: Match };
 
-// Tela "Meus Palpites" (aba Palpites).
 export default function PredictionsScreen() {
-  const [items, setItems] = useState<Item[]>([]);            // palpites + partidas combinados
-  const [totalPoints, setTotalPoints] = useState(0);        // soma de pontos
-  const [loading, setLoading] = useState(true);             // carregando?
-  const [error, setError] = useState<string | null>(null);  // erro?
+  const [items, setItems] = useState<Item[]>([]);
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Carrega palpites e partidas e os combina.
+  // Carrega palpites e partidas e combina cada palpite com a sua partida.
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Busca palpites e partidas em paralelo.
       const [preds, matches] = await Promise.all([
         listMyPredictions(),
         listMatches(),
       ]);
-      // Cria um Map id->partida para localizar a partida de cada palpite rapidamente.
       const byId = new Map(matches.map((m) => [m.id, m]));
       const joined: Item[] = preds
-        // Para cada palpite, anexa sua partida (ou null se não achar).
         .map((p) => {
           const match = byId.get(p.matchId);
           return match ? { prediction: p, match } : null;
         })
-        // Remove os nulos. O "(x): x is Item" diz ao TS que sobraram só Items.
         .filter((x): x is Item => x !== null)
-        // Ordena do jogo mais recente para o mais antigo (data decrescente).
         .sort(
           (a, b) =>
             new Date(b.match.datetime).getTime() -
             new Date(a.match.datetime).getTime()
         );
       setItems(joined);
-      // Soma os pontos de todos os palpites (reduce acumula; "?? 0" trata null).
       setTotalPoints(
         preds.reduce((sum, p) => sum + (p.points ?? 0), 0)
       );
@@ -71,15 +62,12 @@ export default function PredictionsScreen() {
     }
   }, []);
 
-  // recarrega ao focar a aba
-  // useFocusEffect roda toda vez que a aba volta a ficar visível (não só ao montar).
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load])
   );
 
-  // Tela de carregamento/erro.
   if (loading || error) {
     return (
       <ScreenContainer>
@@ -88,10 +76,9 @@ export default function PredictionsScreen() {
     );
   }
 
-  // Função que desenha um cartão de palpite. Recebe um Item da lista.
   const renderItem = ({ item }: { item: Item }) => {
-    const { prediction, match } = item;            // desestrutura o item
-    const finished = match.status === 'FINISHED';  // a partida já terminou?
+    const { prediction, match } = item;
+    const finished = match.status === 'FINISHED';
 
     return (
       <TouchableOpacity
@@ -104,15 +91,13 @@ export default function PredictionsScreen() {
         accessibilityHint="Abre os detalhes da partida"
         style={styles.card}
       >
-        {/* Times da partida */}
         <View style={styles.teams}>
           <TeamRow team={match.homeTeam} />
           <TeamRow team={match.awayTeam} />
         </View>
 
-        <View style={styles.divider} />{/* linha divisória */}
+        <View style={styles.divider} />
 
-        {/* Linha com o palpite do usuário */}
         <View style={styles.guessRow}>
           <Text style={styles.guessLabel}>Seu palpite</Text>
           <Text style={styles.guessValue}>
@@ -121,7 +106,6 @@ export default function PredictionsScreen() {
         </View>
 
         {finished ? (
-          // Se a partida terminou: mostra resultado real + critério + pontos.
           <>
             <View style={styles.guessRow}>
               <Text style={styles.guessLabel}>Resultado</Text>
@@ -130,7 +114,6 @@ export default function PredictionsScreen() {
               </Text>
             </View>
             <View style={styles.statusRow}>
-              {/* Ícone vermelho (X) se errou, verde (check) caso contrário */}
               <Ionicons
                 name={
                   prediction.criterion === 'MISS'
@@ -146,17 +129,15 @@ export default function PredictionsScreen() {
                 accessible={false}
               />
               <Text style={styles.statusText}>
-                {/* Texto do critério, ou "Aguardando" se ainda não apurado */}
                 {prediction.criterion
                   ? CRITERION_SHORT[prediction.criterion]
                   : 'Aguardando'}
               </Text>
-              <View style={styles.spacer} />{/* empurra os pontos p/ a direita */}
+              <View style={styles.spacer} />
               <Text style={styles.points}>{prediction.points ?? 0} pts</Text>
             </View>
           </>
         ) : (
-          // Se ainda não terminou: apenas "Aguardando".
           <View style={styles.statusRow}>
             <Ionicons
               name="time-outline"
@@ -174,23 +155,22 @@ export default function PredictionsScreen() {
   return (
     <ScreenContainer noPadding>
       <FlatList
-        data={items}                                          // dados da lista
-        keyExtractor={(item) => String(item.prediction.id)}  // chave única por palpite
+        data={items}
+        keyExtractor={(item) => String(item.prediction.id)}
         contentContainerStyle={styles.list}
-        renderItem={renderItem}                              // como desenhar cada item
-        ListHeaderComponent={                                // cabeçalho fixo no topo da lista
+        renderItem={renderItem}
+        ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.title} accessibilityRole="header">
               Meus Palpites
             </Text>
             <Text style={styles.subtitle}>
-              {/* Quantidade (com singular/plural) e total de pontos */}
               {items.length}{' '}
               {items.length === 1 ? 'palpite' : 'palpites'} · {totalPoints} pts
             </Text>
           </View>
         }
-        ListEmptyComponent={                                 // exibido quando não há palpites
+        ListEmptyComponent={
           <StateView
             empty
             emptyIcon="create-outline"
@@ -202,7 +182,6 @@ export default function PredictionsScreen() {
   );
 }
 
-// Estilos.
 const styles = StyleSheet.create({
   list: {
     padding: theme.spacing.lg,
@@ -233,12 +212,12 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   divider: {
-    height: 1,                                  // linha fina horizontal
+    height: 1,
     backgroundColor: theme.colors.border,
     marginVertical: theme.spacing.xs,
   },
   guessRow: {
-    flexDirection: 'row',                       // rótulo à esquerda, valor à direita
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -265,10 +244,10 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   spacer: {
-    flex: 1,                                    // ocupa o espaço livre (empurra os pontos)
+    flex: 1,
   },
   points: {
     ...theme.font.title,
-    color: theme.colors.accent,                 // pontos em dourado
+    color: theme.colors.accent,
   },
 });

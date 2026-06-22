@@ -1,7 +1,6 @@
 import { apiPost } from './api';
 
-// RF-003 — Solicita o token de recuperação de senha.
-// O backend devolve o token (em produção iria por e-mail).
+// Solicita o token de recuperação de senha (em produção iria por e-mail).
 export async function forgotPassword(email: string): Promise<string> {
   const res = await apiPost<{ token: string; mensagem: string }>(
     '/auth/forgot-password',
@@ -10,7 +9,7 @@ export async function forgotPassword(email: string): Promise<string> {
   return res.token;
 }
 
-// RF-003 — Redefine a senha usando o token recebido.
+// Redefine a senha usando o token recebido.
 export async function resetPassword(
   token: string,
   novaSenha: string

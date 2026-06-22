@@ -1,52 +1,46 @@
-import React, { useState } from 'react'; // React + hook de estado local
+import React, { useState } from 'react';
 import {
-  StyleSheet,         // cria estilos
-  Text,               // texto (rótulo e mensagem de erro)
-  TextInput,          // campo de digitação
-  TouchableOpacity,   // botão tocável (ícone de mostrar/ocultar senha)
-  View,               // container
-  type TextInputProps, // tipo com todas as props nativas de um TextInput
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  type TextInputProps,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // ícones
-import { theme } from '../constants/theme';     // tokens de design
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../constants/theme';
 
-// Props do Input: herda TODAS as props de um TextInput nativo e adiciona as nossas.
 type Props = TextInputProps & {
-  label: string;                          // rótulo acima do campo
-  icon?: keyof typeof Ionicons.glyphMap;  // ícone à esquerda (opcional)
-  error?: string | null;                  // mensagem de erro (opcional)
-  secureTextEntry?: boolean;              // se true, é campo de senha (oculta o texto)
+  label: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  error?: string | null;
+  secureTextEntry?: boolean;
 };
 
-// Componente Input. Extrai props próprias e junta o resto em "rest".
 export default function Input({
   label,
   icon,
   error,
   secureTextEntry,
   style,
-  ...rest // demais props nativas (placeholder, value, onChangeText, etc.)
+  ...rest
 }: Props) {
-  // Estado: campo está focado? (controla a cor da borda)
   const [focused, setFocused] = useState(false);
-  // Estado: texto está oculto? Começa oculto se for campo de senha. "!!" converte p/ booleano.
   const [hidden, setHidden] = useState(!!secureTextEntry);
 
-  // Atalho booleano: existe mensagem de erro?
   const hasError = !!error;
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.label}>{label}</Text>{/* rótulo do campo */}
+      <Text style={styles.label}>{label}</Text>
       <View
         style={[
-          styles.field,                       // estilo base do campo
-          focused && styles.fieldFocused,     // borda dourada quando focado
-          hasError && styles.fieldError,      // borda vermelha quando há erro
+          styles.field,
+          focused && styles.fieldFocused,
+          hasError && styles.fieldError,
         ]}
       >
         {icon ? (
-          // Ícone decorativo à esquerda (accessible=false: leitor de tela ignora).
           <Ionicons
             name={icon}
             size={20}
@@ -55,30 +49,29 @@ export default function Input({
           />
         ) : null}
         <TextInput
-          style={[styles.input, style]}                 // estilo do campo + extras
-          placeholderTextColor={theme.colors.textSecondary} // cor do texto de exemplo
-          secureTextEntry={hidden}                      // oculta o texto se "hidden"
+          style={[styles.input, style]}
+          placeholderTextColor={theme.colors.textSecondary}
+          secureTextEntry={hidden}
           onFocus={(e) => {
-            setFocused(true);     // marca como focado (muda a borda)
-            rest.onFocus?.(e);    // chama o onFocus externo, se existir
+            setFocused(true);
+            rest.onFocus?.(e);
           }}
           onBlur={(e) => {
-            setFocused(false);    // tira o foco
-            rest.onBlur?.(e);     // chama o onBlur externo, se existir
+            setFocused(false);
+            rest.onBlur?.(e);
           }}
-          accessibilityLabel={label}  // leitor de tela anuncia o rótulo
-          {...rest}                   // repassa todas as demais props nativas
+          accessibilityLabel={label}
+          {...rest}
         />
         {secureTextEntry ? (
-          // Botão "olho" para mostrar/ocultar a senha (só em campos de senha).
           <TouchableOpacity
-            onPress={() => setHidden((p) => !p)} // inverte o estado oculto/visível
+            onPress={() => setHidden((p) => !p)}
             accessibilityRole="button"
             accessibilityLabel={hidden ? 'Mostrar senha' : 'Ocultar senha'}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} // aumenta a área tocável
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Ionicons
-              name={hidden ? 'eye-outline' : 'eye-off-outline'} // ícone conforme estado
+              name={hidden ? 'eye-outline' : 'eye-off-outline'}
               size={20}
               color={theme.colors.textSecondary}
             />
@@ -86,7 +79,6 @@ export default function Input({
         ) : null}
       </View>
       {hasError ? (
-        // Linha de erro: ícone de alerta + texto, só quando há mensagem.
         <View style={styles.errorRow}>
           <Ionicons
             name="alert-circle-outline"
@@ -101,47 +93,46 @@ export default function Input({
   );
 }
 
-// Estilos do componente.
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: theme.spacing.lg,         // espaço abaixo de cada campo
+    marginBottom: theme.spacing.lg,
   },
   label: {
-    ...theme.font.label,                    // tipografia de rótulo
-    color: theme.colors.textSecondary,      // cor cinza
-    marginBottom: theme.spacing.xs + 2,     // pequeno espaço abaixo do rótulo
+    ...theme.font.label,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs + 2,
   },
   field: {
-    flexDirection: 'row',                   // ícone + input + olho na horizontal
-    alignItems: 'center',                   // centraliza verticalmente
-    backgroundColor: theme.colors.surface,  // fundo do campo
-    borderWidth: 1,                         // espessura da borda
-    borderColor: theme.colors.border,       // cor padrão da borda
-    borderRadius: theme.radius.md,          // cantos arredondados
-    minHeight: 52,                          // altura confortável
-    paddingHorizontal: theme.spacing.lg - 2, // espaço interno lateral
-    gap: theme.spacing.md - 2,              // espaço entre os elementos internos
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    minHeight: 52,
+    paddingHorizontal: theme.spacing.lg - 2,
+    gap: theme.spacing.md - 2,
   },
   fieldFocused: {
-    borderColor: theme.colors.accent,       // borda dourada ao focar
+    borderColor: theme.colors.accent,
   },
   fieldError: {
-    borderColor: theme.colors.danger,       // borda vermelha em caso de erro
+    borderColor: theme.colors.danger,
   },
   input: {
-    flex: 1,                                // ocupa todo o espaço restante
-    color: theme.colors.textPrimary,        // cor do texto digitado
-    ...theme.font.body,                     // tipografia de corpo
-    paddingVertical: theme.spacing.md,      // espaço interno em cima/baixo
+    flex: 1,
+    color: theme.colors.textPrimary,
+    ...theme.font.body,
+    paddingVertical: theme.spacing.md,
   },
   errorRow: {
-    flexDirection: 'row',                   // ícone + texto de erro lado a lado
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,                  // espaço entre eles
-    marginTop: theme.spacing.xs + 2,        // espaço acima da linha de erro
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs + 2,
   },
   errorText: {
-    ...theme.font.caption,                  // tipografia pequena
-    color: theme.colors.danger,             // texto vermelho
+    ...theme.font.caption,
+    color: theme.colors.danger,
   },
 });
